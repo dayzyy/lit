@@ -10,3 +10,11 @@ dependencies = []
 dev = [
     "ruff>=0.14.8",
 ]
+
+[tool.ruff]
+line-length = 88
+exclude = [".git", ".lit", "__pycache__", "build", "dist"]
+fix = true
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C", "N", "I"]
