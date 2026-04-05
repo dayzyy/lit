@@ -1,13 +1,20 @@
-from core.constants.directories import Directories
+from pathlib import Path
+
+from core.structure.exceptions import RepoExistsError
+from core.structure.structure import RepoStructure
 
 
-def create_repo():
-    if Directories.repo_dir.exists():
-        print("Repository has already been initialized for this project!")
-        return
+def create_repo(cwd: Path | None = None):
+    cwd = cwd or Path.cwd()
 
-    for dir in Directories.repo_dirs:
-        dir.mkdir(parents=True, exist_ok=True)
+    if (RepoStructure.repo_exists(cwd)):
+        raise RepoExistsError
+
+    root_path = cwd / RepoStructure.Directories.BASE.value
+
+    for dir in RepoStructure.Directories:
+        dir.get_path(root_path).mkdir(parents=True)
+
 
 if __name__ == "__main__":
     create_repo()
