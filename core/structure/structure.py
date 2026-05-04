@@ -19,18 +19,19 @@ class RepoStructure:
         Provides a `get_path` method to get the full Path object
         relative to the repository root.
         """
+
         BASE = ".lit"
 
         SNAPSHOTS = "snapshots"
 
-        def get_path(self, root_path: Path) -> Path:
+        def get_path(self, lit_path: Path) -> Path:
             """
-            Return path to represented dir based on provided root_path
+            Return path to represented dir based on provided lit_path
             """
-            if self is self.BASE:
-                return root_path
-            return root_path / self.value
-
+            if self is not self.BASE:
+                lit_path = lit_path / self.value
+            print(lit_path)
+            return lit_path
 
     @classmethod
     def is_valid_lit_repo(cls, root_path: Path) -> bool:

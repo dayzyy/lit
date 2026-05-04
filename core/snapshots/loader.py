@@ -31,13 +31,14 @@ class BaseSnapshotLoader(ABC):
 
     @classmethod
     @final
-    def _get_file_path(cls, root_path: Path) -> Path:
-        return RepoStructure.Directories.SNAPSHOTS.get_path(root_path) / cls._FILE_NAME
+    def _get_file_path(cls, lit_path: Path) -> Path:
+        path = RepoStructure.Directories.SNAPSHOTS.get_path(lit_path) / cls._FILE_NAME
+        return path
 
     @classmethod
     @final
-    def _load_raw_snapshots(cls, root_path: Path) -> str:
-        with open(cls._get_file_path(root_path), "r") as snapshots:
+    def _load_raw_snapshots(cls, lit_path: Path) -> str:
+        with open(cls._get_file_path(lit_path), "r") as snapshots:
             return snapshots.read()
 
     @classmethod
@@ -49,8 +50,8 @@ class BaseSnapshotLoader(ABC):
         raise NotImplementedError
 
     @classmethod
-    def load_snapshots(cls, root_path: Path) -> list[ProjectSnapshot]:
-        raw_snapshots = cls._load_raw_snapshots(root_path)
+    def load_snapshots(cls, lit_path: Path) -> list[ProjectSnapshot]:
+        raw_snapshots = cls._load_raw_snapshots(lit_path)
         parsed_snapshots = cls._parse_raw_snapshots(raw_snapshots)
         return [ProjectSnapshot.from_dict(ss) for ss in parsed_snapshots]
 
