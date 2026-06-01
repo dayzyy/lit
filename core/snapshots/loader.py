@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, final
 
 from core.commons.exeptions import ForbiddenOverrideError
+from core.snapshots.exceptions import InvalidSnapshotSchemaError
 from core.snapshots.schemas import ProjectSnapshot
 from core.structure.structure import RepoStructure
 
@@ -53,6 +54,12 @@ class BaseSnapshotLoader(ABC):
     def load_snapshots(cls, lit_path: Path) -> list[ProjectSnapshot]:
         raw_snapshots = cls._load_raw_snapshots(lit_path)
         parsed_snapshots = cls._parse_raw_snapshots(raw_snapshots)
+
+        if not isinstance(parsed_snapshots, list):
+            raise InvalidSnapshotSchemaError(
+                f"{cls.__name__}._parse_raw_snapshots must return a list!"
+            )
+
         return [ProjectSnapshot.from_dict(ss) for ss in parsed_snapshots]
 
 
