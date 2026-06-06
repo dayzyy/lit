@@ -6,19 +6,17 @@ from typing import Any, final
 from core.commons.exeptions import ForbiddenOverrideError
 from core.snapshots.exceptions import InvalidSnapshotSchemaError
 from core.snapshots.schemas import ProjectSnapshot
-from core.structure.structure import RepoStructure
 
 
-class BaseSnapshotLoader(ABC):
+class BaseSnapshotReader(ABC):
     """
     A Base Abstract Class for SnapshotLoaders
     Child classes must implement the load method
     """
 
-    _FILE_NAME = "snapshots"
     _FORBIDDEN_OVERRIDES = (
-        "_get_file_path",
-        "_load_raw_snapshots",
+        "_read_raw_snapshots",
+        "_read_snapshots",
     )
 
     def __init_subclass__(cls) -> None:
@@ -30,42 +28,34 @@ class BaseSnapshotLoader(ABC):
 
         return super().__init_subclass__()
 
-    @classmethod
-    @final
-    def _get_file_path(cls, lit_path: Path) -> Path:
-        path = RepoStructure.Directories.SNAPSHOTS.get_path(lit_path) / cls._FILE_NAME
-        return path
+    def __init__(self, file_path: Path):
+        self.file_path = file_path
 
-    @classmethod
     @final
-    def _load_raw_snapshots(cls, lit_path: Path) -> str:
-        with open(cls._get_file_path(lit_path), "r") as snapshots:
+    def _read_raw_snapshots(self) -> str:
+        with open(self.file_path, "r") as snapshots:
             return snapshots.read()
 
-    @classmethod
     @abstractmethod
-    def _parse_raw_snapshots(cls, raw_snapshots: str) -> list[dict[str, Any]]:
+    def _parse_raw_snapshots(self, raw_snapshots: str) -> list[dict[str, Any]]:
         """
         This method must turn 'raw_snapshots' into a python dictionary
         """
         raise NotImplementedError
 
-    @classmethod
-    def load_snapshots(cls, lit_path: Path) -> list[ProjectSnapshot]:
-        raw_snapshots = cls._load_raw_snapshots(lit_path)
-        parsed_snapshots = cls._parse_raw_snapshots(raw_snapshots)
+    @final
+    def read_snapshots(self) -> list[ProjectSnapshot]:
+        raw_snapshots = self._read_raw_snapshots()
+        parsed_snapshots = self._parse_raw_snapshots(raw_snapshots)
 
         if not isinstance(parsed_snapshots, list):
             raise InvalidSnapshotSchemaError(
-                f"{cls.__name__}._parse_raw_snapshots must return a list!"
+                f"{self.__class__.__name__}._parse_raw_snapshots must return a list!"
             )
 
         return [ProjectSnapshot.from_dict(ss) for ss in parsed_snapshots]
 
 
-class JSONSnapshotLoader(BaseSnapshotLoader):
-    _FILE_NAME = "snapshots.json"
-
-    @classmethod
-    def _parse_raw_snapshots(cls, raw_snapshots: str) -> list[dict[str, Any]]:
+class JSONSnapshotReader(BaseSnapshotReader):
+    def _parse_raw_snapshots(self, raw_snapshots: str) -> list[dict[str, Any]]:
         return json.loads(raw_snapshots)
