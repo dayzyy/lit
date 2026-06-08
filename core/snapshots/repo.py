@@ -1,4 +1,3 @@
-from abc import ABC
 from pathlib import Path
 from typing import final
 
@@ -7,7 +6,7 @@ from core.snapshots.writer import BaseSnapshotWriter
 from core.structure.structure import RepoStructure
 
 
-class SnapshotRepository(ABC):
+class SnapshotRepository:
     _FILE_NAME = "snapshots"
 
     def __init__(
