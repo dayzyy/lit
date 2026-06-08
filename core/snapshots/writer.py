@@ -44,10 +44,16 @@ class BaseSnapshotWriter(ABC):
 
 
 class JSONSnapshotWriter(BaseSnapshotWriter):
+    INITIAL_STRUCTURE = ()
+
     def add(self, snapshot: ProjectSnapshot):
         json_reader = JSONSnapshotReader(self.file_path)
         snapshots = json_reader.read_snapshots()
         snapshots.append(snapshot)
 
         with open(self.file_path, "w") as f:
-            json.dump(snapshots, f)
+            json.dump([s.to_dict() for s in snapshots], f)
+
+    def init(self) -> None:
+        with open(self.file_path, "w") as f:
+            json.dump(self.INITIAL_STRUCTURE, f)
