@@ -14,9 +14,10 @@ def lit_path(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def snapshots_path(tmp_path: Path) -> Path:
-    lit_path = create_repo(tmp_path)
-    return (
+def snapshots_path(lit_path: Path) -> Path:
+    path = (
         RepoStructure.Directories.SNAPSHOTS.get_path(lit_path)
         / SnapshotRepository._FILE_NAME
     )
+    path.touch()
+    return path
