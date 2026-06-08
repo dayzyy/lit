@@ -6,6 +6,7 @@ from typing import Any, final
 from core.commons.exeptions import ForbiddenOverrideError
 from core.snapshots.exceptions import InvalidSnapshotSchemaError
 from core.snapshots.schemas import ProjectSnapshot
+from core.snapshots.utils import ensure_snapshot_file_exists
 
 
 class BaseSnapshotReader(ABC):
@@ -29,6 +30,7 @@ class BaseSnapshotReader(ABC):
         return super().__init_subclass__()
 
     def __init__(self, file_path: Path):
+        ensure_snapshot_file_exists(file_path)
         self.file_path = file_path
 
     @final
