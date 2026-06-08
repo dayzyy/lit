@@ -3,14 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from core.snapshots.exceptions import InvalidSnapshotSchemaError
+from core.snapshots.exceptions import (
+    InvalidSnapshotSchemaError,
+    SnapshotFileNotFoundError,
+)
 from core.snapshots.reader import JSONSnapshotReader
 from core.snapshots.schemas import ProjectSnapshot
 from tests.unit.utils import make_valid_project_snapshot_dict
 
 
 def test_snpashot_reader_raises_if_file_not_found(tmp_path: Path):
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(SnapshotFileNotFoundError):
         reader = JSONSnapshotReader(tmp_path / "invalid")
         reader.read_snapshots()
 
