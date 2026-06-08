@@ -30,7 +30,6 @@ class RepoStructure:
             """
             if self is not self.BASE:
                 lit_path = lit_path / self.value
-            print(lit_path)
             return lit_path
 
     @classmethod
