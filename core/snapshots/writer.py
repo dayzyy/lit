@@ -43,7 +43,7 @@ class BaseSnapshotWriter(ABC):
 
 
 class JSONSnapshotWriter(BaseSnapshotWriter):
-    INITIAL_STRUCTURE = ()
+    INITIAL_STRUCTURE = []
 
     def add(self, snapshot: ProjectSnapshot):
         json_reader = JSONSnapshotReader(self.file_path)
