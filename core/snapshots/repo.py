@@ -16,6 +16,9 @@ class SnapshotRepository:
         writer_cls: type[BaseSnapshotWriter],
     ):
         snapshots_file_path = self._get_file_path(lit_path)
+        if not snapshots_file_path.exists():
+            snapshots_file_path.touch()
+            writer_cls._initialize_file(snapshots_file_path)
 
         self.reader = reader_cls(snapshots_file_path)
         self.writer = writer_cls(snapshots_file_path)
