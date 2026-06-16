@@ -1,6 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import final
 
 from core.snapshots.reader import JSONSnapshotReader
 from core.snapshots.schemas import ProjectSnapshot
@@ -25,8 +26,17 @@ class BaseSnapshotWriter(ABC):
     def __init__(self, file_path: Path):
         self.file_path = file_path
 
-    @abstractmethod
+    @final
     def add(self, snapshot: ProjectSnapshot) -> None:
+        if not isinstance(snapshot, ProjectSnapshot):
+            raise TypeError(
+                f"'snapshot' must be 'ProjectSnapshot', got {type(snapshot).__name__}"
+            )
+
+        self._add(snapshot)
+
+    @abstractmethod
+    def _add(self, snapshot: ProjectSnapshot) -> None:
         """
         Persist a snapshot to the configured storage file.
         """
@@ -45,7 +55,7 @@ class BaseSnapshotWriter(ABC):
 class JSONSnapshotWriter(BaseSnapshotWriter):
     INITIAL_STRUCTURE = []
 
-    def add(self, snapshot: ProjectSnapshot):
+    def _add(self, snapshot: ProjectSnapshot):
         json_reader = JSONSnapshotReader(self.file_path)
         snapshots = json_reader.read_snapshots()
         snapshots.append(snapshot)
