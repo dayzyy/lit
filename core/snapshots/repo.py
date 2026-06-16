@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import final
 
+from core.snapshots.exceptions import SnapshotFileNotFoundError
 from core.snapshots.reader import BaseSnapshotReader
 from core.snapshots.writer import BaseSnapshotWriter
 from core.structure.structure import RepoStructure
@@ -17,8 +18,7 @@ class SnapshotRepository:
     ):
         snapshots_file_path = self._get_file_path(lit_path)
         if not snapshots_file_path.exists():
-            snapshots_file_path.touch()
-            writer_cls._initialize_file(snapshots_file_path)
+            raise SnapshotFileNotFoundError
 
         self.reader = reader_cls(snapshots_file_path)
         self.writer = writer_cls(snapshots_file_path)

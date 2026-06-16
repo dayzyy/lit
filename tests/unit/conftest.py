@@ -19,5 +19,4 @@ def snapshots_path(lit_path: Path) -> Path:
         RepoStructure.Directories.SNAPSHOTS.get_path(lit_path)
         / SnapshotRepository._FILE_NAME
     )
-    path.touch()
     return path
