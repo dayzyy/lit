@@ -4,9 +4,11 @@ from pathlib import Path
 from typing import Any, final
 
 from core.commons.exeptions import ForbiddenOverrideError
-from core.snapshots.exceptions import InvalidSnapshotSchemaError
+from core.snapshots.exceptions import (
+    InvalidSnapshotSchemaError,
+    SnapshotFileNotFoundError,
+)
 from core.snapshots.schemas import ProjectSnapshot
-from core.snapshots.utils import ensure_snapshot_file_exists
 
 
 class BaseSnapshotReader(ABC):
@@ -30,13 +32,15 @@ class BaseSnapshotReader(ABC):
         return super().__init_subclass__()
 
     def __init__(self, file_path: Path):
-        ensure_snapshot_file_exists(file_path)
         self.file_path = file_path
 
     @final
     def _read_raw_snapshots(self) -> str:
-        with open(self.file_path, "r") as snapshots:
-            return snapshots.read()
+        try:
+            with open(self.file_path, "r") as snapshots:
+                return snapshots.read()
+        except FileNotFoundError as err:
+            raise SnapshotFileNotFoundError from err
 
     @abstractmethod
     def _parse_raw_snapshots(self, raw_snapshots: str) -> list[dict[str, Any]]:

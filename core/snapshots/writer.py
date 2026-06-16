@@ -4,7 +4,6 @@ from pathlib import Path
 
 from core.snapshots.reader import JSONSnapshotReader
 from core.snapshots.schemas import ProjectSnapshot
-from core.snapshots.utils import ensure_snapshot_file_exists
 
 
 class BaseSnapshotWriter(ABC):
@@ -24,7 +23,6 @@ class BaseSnapshotWriter(ABC):
     INITIAL_STRUCTURE = None
 
     def __init__(self, file_path: Path):
-        ensure_snapshot_file_exists(file_path)
         self.file_path = file_path
 
     @abstractmethod
@@ -34,8 +32,9 @@ class BaseSnapshotWriter(ABC):
         """
         raise NotImplementedError
 
+    @classmethod
     @abstractmethod
-    def init(self) -> None:
+    def _initialize_file(cls, snapshos_file_path: Path):
         """
         Initialize the snapshot storage file with the format's
         default structure.
@@ -54,6 +53,7 @@ class JSONSnapshotWriter(BaseSnapshotWriter):
         with open(self.file_path, "w") as f:
             json.dump([s.to_dict() for s in snapshots], f)
 
-    def init(self) -> None:
-        with open(self.file_path, "w") as f:
-            json.dump(self.INITIAL_STRUCTURE, f)
+    @classmethod
+    def _initialize_file(cls, snapshos_file_path) -> None:
+        with open(snapshos_file_path, "w") as f:
+            json.dump(cls.INITIAL_STRUCTURE, f)
