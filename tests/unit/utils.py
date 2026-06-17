@@ -4,10 +4,9 @@ from typing import Any
 now = datetime.datetime.now().isoformat()
 
 
-def make_valid_file_snapshot_dict() -> dict[str, list | str]:
+def make_valid_file_snapshot_dict() -> dict[str, str]:
     snapshot = {
-        "history": ["a", "b", "c"],
-        "last_modified": now,
+        "content": "contents of a file",
     }
     return snapshot
 
