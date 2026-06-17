@@ -22,31 +22,21 @@ def parse_iso_datetime(string: str) -> datetime:
 
 @dataclass(frozen=True, slots=True)
 class FileSnapshot:
-    history: list[str]
-    last_modified: datetime
+    content: str
 
     def to_dict(self) -> dict[str, Any]:
-        history = self.history
-        last_modified = self.last_modified.isoformat()
-
-        return {"history": history, "last_modified": last_modified}
+        return {"content": self.content}
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         try:
-            history: list[str] = data["history"]
-            last_modified_raw: str = data["last_modified"]
+            content = data["content"]
         except KeyError as err:
             raise InvalidSnapshotSchemaError(
                 f"FileSnapshot missing key: {err.args[0]}"
             ) from err
 
-        if not isinstance(history, list):
-            raise InvalidSnapshotSchemaError("'history' must be a list!")
-
-        last_modified = parse_iso_datetime(last_modified_raw)
-
-        return cls(history=history, last_modified=last_modified)
+        return cls(str(content))
 
 
 @dataclass(frozen=True, slots=True)
