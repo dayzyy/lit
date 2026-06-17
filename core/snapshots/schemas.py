@@ -8,15 +8,13 @@ from core.snapshots.exceptions import InvalidSnapshotSchemaError
 
 def parse_iso_datetime(string: str) -> datetime:
     if not isinstance(string, str):
-        raise InvalidSnapshotSchemaError(
-            "'last_modified' must be an ISO formated string!"
-        )
+        raise InvalidSnapshotSchemaError(f"'{string}' is not an ISO formated string!")
     try:
         time = datetime.fromisoformat(string)
         return time
     except Exception as err:
         raise InvalidSnapshotSchemaError(
-            "'last_modified' must be ISO formated!"
+            f"'{string}' is not an ISO formated string!"
         ) from err
 
 
