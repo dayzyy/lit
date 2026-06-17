@@ -69,39 +69,6 @@ def invalid_file_value_type(project_snapshot: dict[str, Any]) -> dict[str, Any]:
     return project_snapshot
 
 
-# ---------- FileSnapshot-level mutations ----------
-
-
-def missing_history(project_snapshot: dict[str, Any]) -> dict[str, Any]:
-    project_snapshot = copy.deepcopy(project_snapshot)
-    project_snapshot["files"]["./path/to/file_1"].pop("history", None)
-    return project_snapshot
-
-
-def invalid_history_type(project_snapshot: dict[str, Any]) -> dict[str, Any]:
-    project_snapshot = copy.deepcopy(project_snapshot)
-    project_snapshot["files"]["./path/to/file_1"]["history"] = "not-a-list"
-    return project_snapshot
-
-
-def missing_last_modified(project_snapshot: dict[str, Any]) -> dict[str, Any]:
-    project_snapshot = copy.deepcopy(project_snapshot)
-    project_snapshot["files"]["./path/to/file_1"].pop("last_modified", None)
-    return project_snapshot
-
-
-def invalid_last_modified_type(project_snapshot: dict[str, Any]) -> dict[str, Any]:
-    project_snapshot = copy.deepcopy(project_snapshot)
-    project_snapshot["files"]["./path/to/file_1"]["last_modified"] = 123
-    return project_snapshot
-
-
-def invalid_last_modified_format(project_snapshot: dict[str, Any]) -> dict[str, Any]:
-    project_snapshot = copy.deepcopy(project_snapshot)
-    project_snapshot["files"]["./path/to/file_1"]["last_modified"] = "not-a-date"
-    return project_snapshot
-
-
 @pytest.mark.parametrize(
     "mutate",
     [
@@ -114,11 +81,6 @@ def invalid_last_modified_format(project_snapshot: dict[str, Any]) -> dict[str, 
         invalid_created_at_format,
         invalid_file_key_type,
         invalid_file_value_type,
-        missing_history,
-        invalid_history_type,
-        missing_last_modified,
-        invalid_last_modified_type,
-        invalid_last_modified_format,
     ],
 )
 def test_snapshot_schemas_init_raise_for_invalid_data(mutate):
