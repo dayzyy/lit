@@ -36,6 +36,14 @@ class FileSnapshot:
 
         return cls(str(content))
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FileSnapshot):
+            raise TypeError(
+                f"'other' must be 'FileSnapshot', got {type(other).__name__}"
+            )
+
+        return self.content == other.content
+
 
 @dataclass(frozen=True, slots=True)
 class ProjectSnapshot:
@@ -78,3 +86,11 @@ class ProjectSnapshot:
             files[Path(path)] = FileSnapshot.from_dict(ss)
 
         return cls(id=id, files=files, created_at=created_at)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ProjectSnapshot):
+            raise TypeError(
+                f"'other' must be 'ProjectSnapshot', got {type(other).__name__}"
+            )
+
+        return self.files == other.files
