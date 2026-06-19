@@ -18,6 +18,9 @@ class LitCommand(ABC):
     behavior.
     """
 
+    def __init__(self, cwd: Path | None = None):
+        self.cwd = cwd or Path.cwd()
+
     @final
     def run(self):
         self.execute()
@@ -44,8 +47,8 @@ class RepoCommand(LitCommand):
     lit_path: Path
 
     def __init__(self, cwd: Path | None = None):
-        cwd = cwd or Path.cwd()
-        self.lit_path = RepoStructure.find_valid_repo_root(cwd)
+        super().__init__(cwd)
+        self.lit_path = RepoStructure.find_valid_repo_root(self.cwd)
 
 
 class InitCommand(LitCommand):
