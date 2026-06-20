@@ -1,10 +1,10 @@
 from argparse import ArgumentParser, _SubParsersAction
 
-from cli.commands import InitCommand, LitCommand
+from cli.commands import InitCommand, LitCommand, SnapshotCommand
 
 
 def register_command(
-    subparsers: _SubParsersAction[ArgumentParser],
+    subparsers: _SubParsersAction,
     name: str,
     command_cls: type[LitCommand],
 ) -> None:
@@ -31,5 +31,6 @@ def create_parser() -> ArgumentParser:
     )
 
     register_command(subparsers, "init", InitCommand)
+    register_command(subparsers, "snapshot", SnapshotCommand)
 
     return parser
