@@ -4,6 +4,7 @@ INVALID_SNAPSHOT_SCHEMA = "Invalid snapshot schema!"
 SNAPSHOT_FILE_NOT_FOUND = "Snapshot file not found!"
 SNAPSHOT_FILE_ALREADY_EXISTS = "Snapshot file arleady exists!"
 SNAPSHOT_NOT_FOUND = "Snapshot not found!"
+NOTHING_TO_COMMIT = "No new changed to commit!"
 
 
 class InvalidSnapshotSchemaError(BaseExc):
@@ -20,3 +21,7 @@ class SnapshotFileAlreadyExistsError(BaseExc):
 
 class SnapshotNotFoundError(BaseExc):
     message = SNAPSHOT_FILE_NOT_FOUND
+
+
+class NothingToCommitError(BaseExc):
+    message = NOTHING_TO_COMMIT

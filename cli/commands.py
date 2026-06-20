@@ -3,6 +3,10 @@ from pathlib import Path
 from typing import final
 
 from commands.init import create_repo
+from config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from core.snapshots.builder import build_snapshot
+from core.snapshots.exceptions import NothingToCommitError
+from core.snapshots.repo import SnapshotRepository
 from core.structure.structure import RepoStructure
 
 
@@ -48,9 +52,28 @@ class RepoCommand(LitCommand):
 
     def __init__(self, cwd: Path | None = None):
         super().__init__(cwd)
+
         self.lit_path = RepoStructure.find_valid_repo_root(self.cwd)
+
+        self._init_snapshot_repo()
+
+    def _init_snapshot_repo(self):
+        self.repo = SnapshotRepository(
+            self.lit_path, SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+        )
 
 
 class InitCommand(LitCommand):
-    def execute():
+    def execute(self):
         create_repo()
+
+
+class SnapshotCommand(RepoCommand):
+    def execute(self):
+        latest_snapshot = self.repo.latest()
+        new_snapshot = build_snapshot(self.lit_path.parent)
+
+        if latest_snapshot == new_snapshot:
+            raise NothingToCommitError
+
+        self.repo.add(new_snapshot)
