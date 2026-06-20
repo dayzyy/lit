@@ -3,6 +3,7 @@ from typing import final
 
 from core.snapshots.exceptions import SnapshotFileNotFoundError
 from core.snapshots.reader import BaseSnapshotReader
+from core.snapshots.schemas import ProjectSnapshot
 from core.snapshots.writer import BaseSnapshotWriter
 from core.structure.structure import RepoStructure
 
@@ -28,3 +29,16 @@ class SnapshotRepository:
     def _get_file_path(cls, lit_path: Path) -> Path:
         path = RepoStructure.Directories.SNAPSHOTS.get_path(lit_path) / cls._FILE_NAME
         return path
+
+    @final
+    def add(self, snapshot: ProjectSnapshot) -> None:
+        self.writer.add(snapshot)
+
+    @final
+    def latest(self) -> ProjectSnapshot:
+        snapshots = self.reader.read_snapshots()
+
+        if not snapshots:
+            raise SnapshotFileNotFoundError
+
+        return snapshots[-1]
