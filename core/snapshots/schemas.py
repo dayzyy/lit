@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Self
+from uuid import uuid4
 
 from core.snapshots.exceptions import InvalidSnapshotSchemaError
 
@@ -47,9 +48,9 @@ class FileSnapshot:
 
 @dataclass(frozen=True, slots=True)
 class ProjectSnapshot:
-    id: str
     files: dict[Path, FileSnapshot]
-    created_at: datetime = field(default_factory=datetime.now)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: datetime = field(default_factory=lambda: datetime.now())
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
