@@ -69,8 +69,13 @@ class InitCommand(LitCommand):
 
 
 class SnapshotCommand(RepoCommand):
+    def __init__(self, message: str, cwd: Path | None = None):
+        super().__init__(cwd)
+        self.message = message
+
     def execute(self):
         latest_snapshot = self.repo.latest()
+        new_snapshot = build_snapshot(self.lit_path.parent, self.message)
         new_snapshot = build_snapshot(self.lit_path.parent)
 
         if latest_snapshot == new_snapshot:

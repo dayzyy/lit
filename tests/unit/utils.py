@@ -14,6 +14,7 @@ def make_valid_file_snapshot_dict() -> dict[str, str]:
 def make_valid_project_snapshot_dict() -> dict[str, Any]:
     snapshot = {
         "id": "0",
+        "message": "test message",
         "files": {
             "./path/to/file_1": make_valid_file_snapshot_dict(),
             "./path/to/file_2": make_valid_file_snapshot_dict(),
