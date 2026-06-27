@@ -19,6 +19,7 @@ def register_command(
     configuration concise as new commands are added.
     """
     command_parser = subparsers.add_parser(name)
+    command_cls.configure_parser(command_parser)
     command_parser.set_defaults(command_cls=command_cls)
 
 

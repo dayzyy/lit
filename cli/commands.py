@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import final
 
@@ -24,6 +25,10 @@ class LitCommand(ABC):
 
     def __init__(self, cwd: Path | None = None):
         self.cwd = cwd or Path.cwd()
+
+    @staticmethod
+    def configure_parser(parser: ArgumentParser) -> None:
+        pass
 
     @final
     def run(self):
@@ -73,10 +78,18 @@ class SnapshotCommand(RepoCommand):
         super().__init__(cwd)
         self.message = message
 
+    @staticmethod
+    def configure_parser(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-m",
+            "--message",
+            required=True,
+            help="Snapshot message describing the state",
+        )
+
     def execute(self):
         latest_snapshot = self.repo.latest()
         new_snapshot = build_snapshot(self.lit_path.parent, self.message)
-        new_snapshot = build_snapshot(self.lit_path.parent)
 
         if latest_snapshot == new_snapshot:
             raise NothingToCommitError
