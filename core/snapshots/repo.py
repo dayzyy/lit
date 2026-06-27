@@ -36,9 +36,14 @@ class SnapshotRepository:
 
     @final
     def latest(self) -> ProjectSnapshot:
-        snapshots = self.reader.read_snapshots()
+        snapshots = self.all()
 
         if not snapshots:
             raise SnapshotFileNotFoundError
 
         return snapshots[-1]
+
+    @final
+    def all(self) -> list[ProjectSnapshot]:
+        snapshots = self.reader.read_snapshots()
+        return snapshots
