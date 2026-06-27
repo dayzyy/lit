@@ -8,7 +8,7 @@ def main():
     cwd = Path.cwd()
     parser = create_parser()
     args = parser.parse_args()
-    command: LitCommand = args.command_cls(cwd)
+    command: LitCommand = args.command_cls.from_args(args=args, cwd=cwd)
 
     command.run()
 

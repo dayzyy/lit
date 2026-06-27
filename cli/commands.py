@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import final
+from typing import Self, final
 
 from commands.init import create_repo
 from config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
@@ -28,7 +28,26 @@ class LitCommand(ABC):
 
     @staticmethod
     def configure_parser(parser: ArgumentParser) -> None:
-        pass
+        """
+        Configure the command-specific CLI arguments.
+
+        Implementations should register any arguments required by the command
+        on the provided parser. This method is invoked during parser creation,
+        allowing each command to define its own command-line interface while
+        keeping parser setup centralized.
+        """
+        return None
+
+    @classmethod
+    def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
+        """
+        Create a command instance from parsed CLI arguments.
+
+        This method acts as an adapter between ``argparse`` and the command,
+        extracting the relevant values from the parsed argument namespace and
+        constructing a fully initialized command instance.
+        """
+        return cls(cwd=cwd)
 
     @final
     def run(self):
@@ -62,6 +81,7 @@ class RepoCommand(LitCommand):
 
         self._init_snapshot_repo()
 
+    @final
     def _init_snapshot_repo(self):
         self.repo = SnapshotRepository(
             self.lit_path, SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
@@ -73,10 +93,15 @@ class InitCommand(LitCommand):
         create_repo()
 
 
-class SnapshotCommand(RepoCommand):
+class SnapshotCreateCommand(RepoCommand):
     def __init__(self, message: str, cwd: Path | None = None):
         super().__init__(cwd)
         self.message = message
+
+    @classmethod
+    def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
+        message = args.message
+        return cls(message=message, cwd=cwd)
 
     @staticmethod
     def configure_parser(parser: ArgumentParser) -> None:
@@ -95,3 +120,15 @@ class SnapshotCommand(RepoCommand):
             raise NothingToCommitError
 
         self.repo.add(new_snapshot)
+
+
+class SnapshotListCommand(RepoCommand):
+    def execute(self):
+        snapshots = self.repo.all()
+
+        print(f"{'ID':36} {'CREATED':20} MESSAGE")
+        print("─" * 80)
+
+        for snapshot in snapshots:
+            created = snapshot.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            print(f"{snapshot.id:36} " f"{created:20} " f"{snapshot.message}")
