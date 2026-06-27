@@ -30,6 +30,7 @@ def test_file_snapshot_inequality_different_content():
         (
             ProjectSnapshot(
                 id="1",
+                message="test message",
                 files={
                     Path("a.txt"): FileSnapshot(content="a"),
                     Path("b.txt"): FileSnapshot(content="b"),
@@ -37,6 +38,7 @@ def test_file_snapshot_inequality_different_content():
             ),
             ProjectSnapshot(
                 id="2",
+                message="test message",
                 files={
                     Path("a.txt"): FileSnapshot(content="a"),
                     Path("b.txt"): FileSnapshot(content="b"),
@@ -47,10 +49,12 @@ def test_file_snapshot_inequality_different_content():
         (
             ProjectSnapshot(
                 id="1",
+                message="test message",
                 files={Path("a.txt"): FileSnapshot(content="a")},
             ),
             ProjectSnapshot(
                 id="2",
+                message="test message",
                 files={Path("a.txt"): FileSnapshot(content="different")},
             ),
             False,
@@ -64,6 +68,7 @@ def test_project_snapshot_equality(snap1, snap2, expected):
 def test_project_snapshot_inequality_missing_file():
     snap1 = ProjectSnapshot(
         id="1",
+        message="test message",
         files={
             Path("a.txt"): FileSnapshot(content="a"),
             Path("b.txt"): FileSnapshot(content="b"),
@@ -72,6 +77,7 @@ def test_project_snapshot_inequality_missing_file():
 
     snap2 = ProjectSnapshot(
         id="1",
+        message="test message",
         files={
             Path("a.txt"): FileSnapshot(content="a"),
         },
@@ -83,11 +89,13 @@ def test_project_snapshot_inequality_missing_file():
 def test_project_snapshot_inequality_extra_file():
     snap1 = ProjectSnapshot(
         id="1",
+        message="test message",
         files={Path("a.txt"): FileSnapshot(content="a")},
     )
 
     snap2 = ProjectSnapshot(
         id="1",
+        message="test message",
         files={
             Path("a.txt"): FileSnapshot(content="a"),
             Path("b.txt"): FileSnapshot(content="b"),
