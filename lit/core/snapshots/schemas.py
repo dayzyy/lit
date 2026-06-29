@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Self
 from uuid import uuid4
 
-from core.snapshots.exceptions import InvalidSnapshotSchemaError
+from lit.core.snapshots.exceptions import InvalidSnapshotSchemaError
 
 
 def parse_iso_datetime(string: str) -> datetime:

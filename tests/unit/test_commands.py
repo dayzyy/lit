@@ -1,8 +1,8 @@
 import pytest
 
-from cli.commands import SnapshotCreateCommand
-from core.snapshots.builder import build_snapshot
-from core.snapshots.exceptions import NothingToCommitError
+from lit.cli.commands import SnapshotCreateCommand
+from lit.core.snapshots.builder import build_snapshot
+from lit.core.snapshots.exceptions import NothingToCommitError
 from tests.conftest import RepoContext
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from cli.commands import LitCommand
-from cli.parser import create_parser
+from lit.cli.commands import LitCommand
+from lit.cli.parser import create_parser
 
 
 def main():

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, _SubParsersAction
 
-from cli.commands import (
+from lit.cli.commands import (
     InitCommand,
     LitCommand,
     SnapshotCreateCommand,

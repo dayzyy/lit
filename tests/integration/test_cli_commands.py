@@ -1,8 +1,8 @@
 import pytest
 
-from cli.parser import create_parser
-from core.snapshots.builder import build_snapshot
-from core.snapshots.exceptions import NothingToCommitError
+from lit.cli.parser import create_parser
+from lit.core.snapshots.builder import build_snapshot
+from lit.core.snapshots.exceptions import NothingToCommitError
 from tests.conftest import RepoContext
 
 

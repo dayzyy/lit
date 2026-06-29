@@ -3,8 +3,8 @@ from typing import Any
 
 import pytest
 
-from core.snapshots.exceptions import InvalidSnapshotSchemaError
-from core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.exceptions import InvalidSnapshotSchemaError
+from lit.core.snapshots.schemas import ProjectSnapshot
 from tests.unit.utils import make_valid_project_snapshot_dict
 
 # ---------- Project-level mutations ----------

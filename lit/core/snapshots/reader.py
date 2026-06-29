@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, final
 
-from core.commons.exeptions import ForbiddenOverrideError
-from core.snapshots.exceptions import (
+from lit.core.commons.exeptions import ForbiddenOverrideError
+from lit.core.snapshots.exceptions import (
     InvalidSnapshotSchemaError,
     SnapshotFileNotFoundError,
 )
-from core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.schemas import ProjectSnapshot
 
 
 class BaseSnapshotReader(ABC):

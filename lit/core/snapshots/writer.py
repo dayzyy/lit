@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import final
 
-from core.snapshots.reader import JSONSnapshotReader
-from core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.reader import JSONSnapshotReader
+from lit.core.snapshots.schemas import ProjectSnapshot
 
 
 class BaseSnapshotWriter(ABC):

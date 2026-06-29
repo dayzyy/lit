@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from core.snapshots.exceptions import (
+from lit.core.snapshots.exceptions import (
     InvalidSnapshotSchemaError,
     SnapshotFileNotFoundError,
 )
-from core.snapshots.reader import JSONSnapshotReader
-from core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.reader import JSONSnapshotReader
+from lit.core.snapshots.schemas import ProjectSnapshot
 from tests.unit.utils import make_valid_project_snapshot_dict
 
 

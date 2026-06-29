@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from core.snapshots.schemas import FileSnapshot, ProjectSnapshot
-from core.structure.structure import RepoStructure
+from lit.core.snapshots.schemas import FileSnapshot, ProjectSnapshot
+from lit.core.structure.structure import RepoStructure
 
 
 def is_ignored(path: Path) -> bool:

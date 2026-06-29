@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import final
 
-from core.snapshots.exceptions import SnapshotFileNotFoundError
-from core.snapshots.reader import BaseSnapshotReader
-from core.snapshots.schemas import ProjectSnapshot
-from core.snapshots.writer import BaseSnapshotWriter
-from core.structure.structure import RepoStructure
+from lit.core.snapshots.exceptions import SnapshotFileNotFoundError
+from lit.core.snapshots.reader import BaseSnapshotReader
+from lit.core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.writer import BaseSnapshotWriter
+from lit.core.structure.structure import RepoStructure
 
 
 class SnapshotRepository:

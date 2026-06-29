@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import final
 
-from core.structure.exceptions import RepoNotFoundError
+from lit.core.structure.exceptions import RepoNotFoundError
 
 
 @final
