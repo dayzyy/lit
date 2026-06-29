@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from core.snapshots.reader import JSONSnapshotReader
-from core.snapshots.schemas import ProjectSnapshot
-from core.snapshots.writer import JSONSnapshotWriter
+from lit.core.snapshots.reader import JSONSnapshotReader
+from lit.core.snapshots.schemas import ProjectSnapshot
+from lit.core.snapshots.writer import JSONSnapshotWriter
 from tests.unit.utils import make_valid_project_snapshot_dict
 
 

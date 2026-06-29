@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
-from core.snapshots.reader import BaseSnapshotReader
-from core.snapshots.repo import SnapshotRepository
-from core.snapshots.writer import BaseSnapshotWriter
-from core.structure.exceptions import RepoExistsError
-from core.structure.structure import RepoStructure
+from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from lit.core.snapshots.reader import BaseSnapshotReader
+from lit.core.snapshots.repo import SnapshotRepository
+from lit.core.snapshots.writer import BaseSnapshotWriter
+from lit.core.structure.exceptions import RepoExistsError
+from lit.core.structure.structure import RepoStructure
 
 
 def create_repo(

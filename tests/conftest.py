@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from commands.init import create_repo
-from config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
-from core.snapshots.repo import SnapshotRepository
-from core.structure.structure import RepoStructure
+from lit.commands.init import create_repo
+from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from lit.core.snapshots.repo import SnapshotRepository
+from lit.core.structure.structure import RepoStructure
 
 
 @dataclass(frozen=True, slots=True)

@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from commands.init import create_repo
-from core.snapshots.reader import JSONSnapshotReader
-from core.snapshots.repo import SnapshotRepository
-from core.snapshots.writer import JSONSnapshotWriter
-from core.structure.exceptions import RepoExistsError
-from core.structure.structure import RepoStructure
+from lit.commands.init import create_repo
+from lit.core.snapshots.reader import JSONSnapshotReader
+from lit.core.snapshots.repo import SnapshotRepository
+from lit.core.snapshots.writer import JSONSnapshotWriter
+from lit.core.structure.exceptions import RepoExistsError
+from lit.core.structure.structure import RepoStructure
 
 
 def test_create_repo_creates_expected_directories(tmp_path: Path):

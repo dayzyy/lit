@@ -1,4 +1,4 @@
-from core.utils.exceptions import BaseExceptionWithDefaultMessage as BaseExc
+from lit.core.utils.exceptions import BaseExceptionWithDefaultMessage as BaseExc
 
 INVALID_SNAPSHOT_SCHEMA = "Invalid snapshot schema!"
 SNAPSHOT_FILE_NOT_FOUND = "Snapshot file not found!"
