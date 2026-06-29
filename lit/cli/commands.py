@@ -116,7 +116,7 @@ class SnapshotCreateCommand(RepoCommand):
         latest_snapshot = self.repo.latest()
         new_snapshot = build_snapshot(self.lit_path.parent, self.message)
 
-        if latest_snapshot == new_snapshot:
+        if latest_snapshot is not None and latest_snapshot == new_snapshot:
             raise NothingToCommitError
 
         self.repo.add(new_snapshot)

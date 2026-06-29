@@ -35,11 +35,11 @@ class SnapshotRepository:
         self.writer.add(snapshot)
 
     @final
-    def latest(self) -> ProjectSnapshot:
+    def latest(self) -> ProjectSnapshot | None:
         snapshots = self.all()
 
         if not snapshots:
-            raise SnapshotFileNotFoundError
+            return None
 
         return snapshots[-1]
 
