@@ -78,6 +78,7 @@ class RepoCommand(LitCommand):
         super().__init__(cwd)
 
         self.lit_path = RepoStructure.find_valid_repo_root(self.cwd)
+        self.root = self.lit_path.parent
 
         self._init_snapshot_repo()
 
@@ -132,3 +133,41 @@ class SnapshotListCommand(RepoCommand):
         for snapshot in snapshots:
             created = snapshot.created_at.strftime("%Y-%m-%d %H:%M:%S")
             print(f"{snapshot.id:36} " f"{created:20} " f"{snapshot.message}")
+
+
+class SnapshotCkeckoutCommand(RepoCommand):
+    def __init__(self, snapshot_id: str, cwd: Path | None = None):
+        super().__init__(cwd)
+        self.target_id = snapshot_id
+
+    @classmethod
+    def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
+        snapshot_id = args.snapshot_id
+        return cls(snapshot_id=snapshot_id, cwd=cwd)
+
+    @staticmethod
+    def configure_parser(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "snapshot_id",
+            help="ID of the snapshot to check out",
+        )
+
+    def execute(self):
+        target_snapshot = self.repo.get(self.target_id)
+        assert target_snapshot is not None
+
+        cwd_files = build_snapshot(root=self.root, message="").files
+        cwd_paths = set(cwd_files)
+        snapshot_files = target_snapshot.files
+        snapshot_paths = set(snapshot_files)
+
+        to_remove = cwd_paths - snapshot_paths
+        to_create = snapshot_paths - cwd_paths
+
+        for relative_path in to_remove:
+            abs_path = self.root / relative_path
+            abs_path.unlink()
+        for relative_path in to_create:
+            abs_path = self.root / relative_path
+            abs_path.touch()
+            abs_path.write_text(snapshot_files[relative_path].content)
