@@ -3,6 +3,7 @@ from argparse import ArgumentParser, _SubParsersAction
 from lit.cli.commands import (
     InitCommand,
     LitCommand,
+    SnapshotCkeckoutCommand,
     SnapshotCreateCommand,
     SnapshotListCommand,
 )
@@ -39,5 +40,6 @@ def create_parser() -> ArgumentParser:
     register_command(subparsers, "init", InitCommand)
     register_command(subparsers, "snapshot", SnapshotCreateCommand)
     register_command(subparsers, "log", SnapshotListCommand)
+    register_command(subparsers, "checkout", SnapshotCkeckoutCommand)
 
     return parser
