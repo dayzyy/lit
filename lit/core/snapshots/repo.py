@@ -1,7 +1,10 @@
 from pathlib import Path
 from typing import final
 
-from lit.core.snapshots.exceptions import SnapshotFileNotFoundError
+from lit.core.snapshots.exceptions import (
+    SnapshotFileNotFoundError,
+    SnapshotNotFoundError,
+)
 from lit.core.snapshots.reader import BaseSnapshotReader
 from lit.core.snapshots.schemas import ProjectSnapshot
 from lit.core.snapshots.writer import BaseSnapshotWriter
@@ -47,3 +50,12 @@ class SnapshotRepository:
     def all(self) -> list[ProjectSnapshot]:
         snapshots = self.reader.read_snapshots()
         return snapshots
+
+    @final
+    def get(self, id: str) -> ProjectSnapshot | None:
+        snapshots = self.all()
+
+        for ss in snapshots:
+            if ss.id == id:
+                return ss
+        raise SnapshotNotFoundError
