@@ -51,10 +51,11 @@ class LitCommand(ABC):
 
     @final
     def run(self):
-        self.execute()
+        message = self.execute()
+        print(message)
 
     @abstractmethod
-    def execute(self):
+    def execute(self) -> str:
         raise NotImplementedError
 
 
@@ -90,8 +91,10 @@ class RepoCommand(LitCommand):
 
 
 class InitCommand(LitCommand):
-    def execute(self):
+    def execute(self) -> str:
         create_repo()
+
+        return "Created an empty lit repository!"
 
 
 class SnapshotCreateCommand(RepoCommand):
@@ -122,17 +125,23 @@ class SnapshotCreateCommand(RepoCommand):
 
         self.repo.add(new_snapshot)
 
+        return f"Created a new snapshot with id: {new_snapshot.id}"
+
 
 class SnapshotListCommand(RepoCommand):
     def execute(self):
         snapshots = self.repo.all()
 
-        print(f"{'ID':36} {'CREATED':20} MESSAGE")
-        print("─" * 80)
+        lines = [
+            f"{'ID':36} {'CREATED':20} MESSAGE",
+            "─" * 80,
+        ]
 
         for snapshot in snapshots:
             created = snapshot.created_at.strftime("%Y-%m-%d %H:%M:%S")
-            print(f"{snapshot.id:36} " f"{created:20} " f"{snapshot.message}")
+            lines.append(f"{snapshot.id:36} " f"{created:20} " f"{snapshot.message}")
+
+        return "\n".join(lines)
 
 
 class SnapshotCkeckoutCommand(RepoCommand):
@@ -172,8 +181,10 @@ class SnapshotCkeckoutCommand(RepoCommand):
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_text(target_files[relative_path].content)
         for relative_path in to_compare:
-            target_snapshot = target_files[relative_path]
-            if cwd_files[relative_path] != target_snapshot:
+            target_file_snapshot = target_files[relative_path]
+            if cwd_files[relative_path] != target_file_snapshot:
                 abs_path = self.root / relative_path
                 abs_path.parent.mkdir(parents=True, exist_ok=True)
-                abs_path.write_text(target_snapshot.content)
+                abs_path.write_text(target_file_snapshot.content)
+
+        return f"Checked out to snapshot {target_snapshot.id}"
