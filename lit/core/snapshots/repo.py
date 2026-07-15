@@ -52,7 +52,7 @@ class SnapshotRepository:
         return snapshots
 
     @final
-    def get(self, id: str) -> ProjectSnapshot | None:
+    def get(self, id: str) -> ProjectSnapshot:
         snapshots = self.all()
 
         for ss in snapshots:
