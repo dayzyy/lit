@@ -154,20 +154,26 @@ class SnapshotCkeckoutCommand(RepoCommand):
 
     def execute(self):
         target_snapshot = self.repo.get(self.target_id)
-        assert target_snapshot is not None
 
         cwd_files = build_snapshot(root=self.root, message="").files
         cwd_paths = set(cwd_files)
-        snapshot_files = target_snapshot.files
-        snapshot_paths = set(snapshot_files)
+        target_files = target_snapshot.files
+        target_paths = set(target_files)
 
-        to_remove = cwd_paths - snapshot_paths
-        to_create = snapshot_paths - cwd_paths
+        to_remove = cwd_paths - target_paths
+        to_create = target_paths - cwd_paths
+        to_compare = cwd_paths & target_paths
 
         for relative_path in to_remove:
             abs_path = self.root / relative_path
             abs_path.unlink()
         for relative_path in to_create:
             abs_path = self.root / relative_path
-            abs_path.touch()
-            abs_path.write_text(snapshot_files[relative_path].content)
+            abs_path.parent.mkdir(parents=True, exist_ok=True)
+            abs_path.write_text(target_files[relative_path].content)
+        for relative_path in to_compare:
+            target_snapshot = target_files[relative_path]
+            if cwd_files[relative_path] != target_snapshot:
+                abs_path = self.root / relative_path
+                abs_path.parent.mkdir(parents=True, exist_ok=True)
+                abs_path.write_text(target_snapshot.content)
