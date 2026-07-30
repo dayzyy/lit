@@ -6,6 +6,7 @@ from typing import Self, final
 from lit.commands.init import create_repo
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
 from lit.core.snapshots.builder import build_snapshot
+from lit.core.snapshots.compare import compare_snapshots
 from lit.core.snapshots.exceptions import NothingToCommitError
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.structure.structure import RepoStructure
@@ -162,29 +163,18 @@ class SnapshotCkeckoutCommand(RepoCommand):
         )
 
     def execute(self):
-        target_snapshot = self.repo.get(self.target_id)
+        snapshot_to_checkout = self.repo.get(self.target_id)
+        target_files = snapshot_to_checkout.files
 
-        cwd_files = build_snapshot(root=self.root, message="").files
-        cwd_paths = set(cwd_files)
-        target_files = target_snapshot.files
-        target_paths = set(target_files)
+        cwd_snapshot = build_snapshot(root=self.root, message="")
+        diff = compare_snapshots(cwd_snapshot, snapshot_to_checkout)
 
-        to_remove = cwd_paths - target_paths
-        to_create = target_paths - cwd_paths
-        to_compare = cwd_paths & target_paths
-
-        for relative_path in to_remove:
+        for relative_path in diff.removed:
             abs_path = self.root / relative_path
             abs_path.unlink()
-        for relative_path in to_create:
+        for relative_path in diff.added | diff.modified:
             abs_path = self.root / relative_path
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_text(target_files[relative_path].content)
-        for relative_path in to_compare:
-            target_file_snapshot = target_files[relative_path]
-            if cwd_files[relative_path] != target_file_snapshot:
-                abs_path = self.root / relative_path
-                abs_path.parent.mkdir(parents=True, exist_ok=True)
-                abs_path.write_text(target_file_snapshot.content)
 
-        return f"Checked out to snapshot {target_snapshot.id}"
+        return f"Checked out to snapshot {snapshot_to_checkout.id}"
