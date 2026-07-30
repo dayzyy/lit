@@ -98,3 +98,10 @@ class ProjectSnapshot:
             )
 
         return self.files == other.files
+
+
+@dataclass(frozen=True, slots=True)
+class SnapshotDiff:
+    removed: set[Path]
+    added: set[Path]
+    modified: set[Path]
