@@ -178,3 +178,42 @@ class SnapshotCkeckoutCommand(RepoCommand):
             abs_path.write_text(target_files[relative_path].content)
 
         return f"Checked out to snapshot {snapshot_to_checkout.id}"
+
+
+class StatusCommand(RepoCommand):
+    def execute(self):
+        latest_snapshot = self.repo.latest()
+        cwd_snapshot = build_snapshot(root=self.root, message="")
+
+        # If no snapshots have been taken before, all files are new
+        if latest_snapshot is None:
+            added = set(cwd_snapshot.files)
+            removed = set()
+            modified = set()
+
+        else:
+            diff = compare_snapshots(latest_snapshot, cwd_snapshot)
+            added = diff.added
+            removed = diff.removed
+            modified = diff.modified
+
+        if not (added or removed or modified):
+            return "Working tree clean."
+
+        lines = []
+
+        if added:
+            lines.append("Added:")
+            lines.extend(f"  {path}" for path in sorted(added))
+            lines.append("")
+
+        if removed:
+            lines.append("Removed:")
+            lines.extend(f"  {path}" for path in sorted(removed))
+            lines.append("")
+
+        if modified:
+            lines.append("Modified:")
+            lines.extend(f"  {path}" for path in sorted(modified))
+
+        return "\n".join(lines)
