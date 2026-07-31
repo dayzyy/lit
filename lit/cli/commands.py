@@ -6,7 +6,7 @@ from typing import Self, final
 from lit.commands.init import create_repo
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
 from lit.core.snapshots.builder import build_snapshot
-from lit.core.snapshots.compare import compare_snapshots
+from lit.core.snapshots.comparer import compare_snapshots
 from lit.core.snapshots.exceptions import NothingToCommitError
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.structure.structure import RepoStructure
