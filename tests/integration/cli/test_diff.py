@@ -1,3 +1,6 @@
+import pytest
+
+from lit.cli.exceptions import TooManySnapshotIDsError
 from lit.cli.parser import create_parser
 from lit.core.snapshots.builder import build_snapshot
 from tests.conftest import RepoContext
@@ -88,3 +91,16 @@ def test_cli_diff_with_two_ids_compares_snapshots(
     assert "Modified: new_file.txt" in captured.out
     assert "-hello" in captured.out
     assert "+hello world!" in captured.out
+
+
+def test_cli_diff_raises_when_more_than_two_ids_are_provided(
+    repo_context: RepoContext,
+):
+    parser = create_parser()
+    args = parser.parse_args(["diff", "id1", "id2", "id3"])
+
+    with pytest.raises(TooManySnapshotIDsError):
+        args.command_cls.from_args(
+            args=args,
+            cwd=repo_context.root,
+        )
