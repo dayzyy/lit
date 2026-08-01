@@ -224,15 +224,15 @@ class StatusCommand(RepoCommand):
 
 class DiffCommand(RepoCommand):
     def __init__(self, snapshot_ids: list[str], cwd: Path | None = None):
+        if len(snapshot_ids) > 2:
+            raise TooManySnapshotIDsError
+
         super().__init__(cwd)
         self.snapshot_ids = snapshot_ids
 
     @classmethod
     def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
         snapshot_ids = args.snapshot_ids
-
-        if len(snapshot_ids) > 2:
-            raise TooManySnapshotIDsError
 
         return cls(
             snapshot_ids=snapshot_ids,
