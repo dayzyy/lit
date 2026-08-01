@@ -3,12 +3,15 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Self, final
 
+from lit.cli.exceptions import TooManySnapshotIDsError
 from lit.commands.init import create_repo
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
 from lit.core.snapshots.builder import build_snapshot
 from lit.core.snapshots.comparer import compare_snapshots
+from lit.core.snapshots.differ import diff_snapshots
 from lit.core.snapshots.exceptions import NothingToCommitError
 from lit.core.snapshots.repo import SnapshotRepository
+from lit.core.snapshots.schemas import ProjectSnapshot
 from lit.core.structure.structure import RepoStructure
 
 
@@ -217,3 +220,54 @@ class StatusCommand(RepoCommand):
             lines.extend(f"  {path}" for path in sorted(modified))
 
         return "\n".join(lines)
+
+
+class DiffCommand(RepoCommand):
+    def __init__(self, snapshot_ids: list[str], cwd: Path | None = None):
+        super().__init__(cwd)
+        self.snapshot_ids = snapshot_ids
+
+    @classmethod
+    def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
+        snapshot_ids = args.snapshot_ids
+
+        if len(snapshot_ids) > 2:
+            raise TooManySnapshotIDsError
+
+        return cls(
+            snapshot_ids=snapshot_ids,
+            cwd=cwd,
+        )
+
+    @staticmethod
+    def configure_parser(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "snapshot_ids",
+            nargs="*",
+            help=(
+                "Zero, one, or two snapshot IDs.\n"
+                "No IDs: compare working tree to latest snapshot.\n"
+                "One ID: compare working tree to that snapshot.\n"
+                "Two IDs: compare the two snapshots."
+            ),
+        )
+
+    def execute(self):
+        cwd_snapshot = build_snapshot(root=self.root, message="")
+
+        if not self.snapshot_ids:
+            latest_snapshot = self.repo.latest() or ProjectSnapshot(
+                files={}, message=""
+            )
+            diff = diff_snapshots(latest_snapshot, cwd_snapshot)
+
+        elif len(self.snapshot_ids) == 1:
+            to_snapshot = self.repo.get(self.snapshot_ids[0])
+            diff = diff_snapshots(cwd_snapshot, to_snapshot)
+
+        else:
+            from_snapshot = self.repo.get(self.snapshot_ids[0])
+            to_snapshot = self.repo.get(self.snapshot_ids[1])
+            diff = diff_snapshots(from_snapshot, to_snapshot)
+
+        return diff

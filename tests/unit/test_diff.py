@@ -7,13 +7,13 @@ def test_diff_reports_modified_file(repo_context: RepoContext):
     file_path = repo_context.root / "new_file.txt"
     file_path.write_text("hello")
 
-    snapshot_1 = build_snapshot(repo_context.root, "commit 1")
+    from_snapshot = build_snapshot(repo_context.root, "commit 1")
 
     file_path.write_text("hello world!")
 
-    snapshot_2 = build_snapshot(repo_context.root, "commit 2")
+    to_snapshot = build_snapshot(repo_context.root, "commit 2")
 
-    diff = diff_snapshots(snapshot_1, snapshot_2)
+    diff = diff_snapshots(from_snapshot, to_snapshot)
 
     assert "Modified: new_file.txt" in diff
     assert "-hello" in diff
@@ -21,14 +21,14 @@ def test_diff_reports_modified_file(repo_context: RepoContext):
 
 
 def test_diff_reports_added_file(repo_context: RepoContext):
-    snapshot_1 = build_snapshot(repo_context.root, "commit 1")
+    from_snapshot = build_snapshot(repo_context.root, "commit 1")
 
     file_path = repo_context.root / "new_file.txt"
     file_path.write_text("hello")
 
-    snapshot_2 = build_snapshot(repo_context.root, "commit 2")
+    to_snapshot = build_snapshot(repo_context.root, "commit 2")
 
-    diff = diff_snapshots(snapshot_1, snapshot_2)
+    diff = diff_snapshots(from_snapshot, to_snapshot)
 
     assert "Added: new_file.txt" in diff
     assert "+hello" in diff
@@ -38,13 +38,13 @@ def test_diff_reports_removed_file(repo_context: RepoContext):
     file_path = repo_context.root / "new_file.txt"
     file_path.write_text("hello")
 
-    snapshot_1 = build_snapshot(repo_context.root, "commit 1")
+    from_snapshot = build_snapshot(repo_context.root, "commit 1")
 
     file_path.unlink()
 
-    snapshot_2 = build_snapshot(repo_context.root, "commit 2")
+    to_snapshot = build_snapshot(repo_context.root, "commit 2")
 
-    diff = diff_snapshots(snapshot_1, snapshot_2)
+    diff = diff_snapshots(from_snapshot, to_snapshot)
 
     assert "Removed: new_file.txt" in diff
     assert "-hello" in diff
@@ -59,7 +59,7 @@ def test_diff_reports_added_removed_and_modified_files(
     removed_file = repo_context.root / "removed.txt"
     removed_file.write_text("goodbye")
 
-    snapshot_1 = build_snapshot(repo_context.root, "commit 1")
+    from_snapshot = build_snapshot(repo_context.root, "commit 1")
 
     # Modify one file
     modified_file.write_text("hello world!")
@@ -71,9 +71,9 @@ def test_diff_reports_added_removed_and_modified_files(
     added_file = repo_context.root / "added.txt"
     added_file.write_text("new file")
 
-    snapshot_2 = build_snapshot(repo_context.root, "commit 2")
+    to_snapshot = build_snapshot(repo_context.root, "commit 2")
 
-    diff = diff_snapshots(snapshot_1, snapshot_2)
+    diff = diff_snapshots(from_snapshot, to_snapshot)
 
     # Modified file
     assert "Modified: modified.txt" in diff

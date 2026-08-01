@@ -5,17 +5,21 @@ from lit.core.snapshots.schemas import ProjectSnapshot
 
 
 def diff_snapshots(
-    snapshot_1: ProjectSnapshot,
-    snapshot_2: ProjectSnapshot,
+    from_snapshot: ProjectSnapshot,
+    to_snapshot: ProjectSnapshot,
 ) -> str:
-    changes = compare_snapshots(snapshot_1, snapshot_2)
+    """
+    Generate a textual diff describing the changes required to transform
+    `from_snapshot` into `to_snapshot`.
+    """
+    changes = compare_snapshots(from_snapshot, to_snapshot)
 
     output = []
 
     for path in changes.added:
         output.append(f"Added: {path}")
 
-        new_content = snapshot_2.files[path].content.splitlines(
+        new_content = to_snapshot.files[path].content.splitlines(
             keepends=True,
         )
 
@@ -32,7 +36,7 @@ def diff_snapshots(
     for path in changes.removed:
         output.append(f"Removed: {path}")
 
-        old_content = snapshot_1.files[path].content.splitlines(
+        old_content = from_snapshot.files[path].content.splitlines(
             keepends=True,
         )
 
@@ -49,10 +53,10 @@ def diff_snapshots(
     for path in changes.modified:
         output.append(f"Modified: {path}")
 
-        old_content = snapshot_1.files[path].content.splitlines(
+        old_content = from_snapshot.files[path].content.splitlines(
             keepends=True,
         )
-        new_content = snapshot_2.files[path].content.splitlines(
+        new_content = to_snapshot.files[path].content.splitlines(
             keepends=True,
         )
 
