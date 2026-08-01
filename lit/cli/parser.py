@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, _SubParsersAction
 
 from lit.cli.commands import (
+    DiffCommand,
     InitCommand,
     LitCommand,
     SnapshotCkeckoutCommand,
@@ -43,5 +44,6 @@ def create_parser() -> ArgumentParser:
     register_command(subparsers, "log", SnapshotListCommand)
     register_command(subparsers, "checkout", SnapshotCkeckoutCommand)
     register_command(subparsers, "status", StatusCommand)
+    register_command(subparsers, "diff", DiffCommand)
 
     return parser
