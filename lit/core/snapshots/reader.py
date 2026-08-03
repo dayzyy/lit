@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, final
 
-from lit.core.commons.exeptions import ForbiddenOverrideError
+from lit.core.commons.exceptions import ForbiddenOverrideError
 from lit.core.snapshots.exceptions import (
-    InvalidSnapshotSchemaError,
+    InvalidParseResultError,
     SnapshotFileNotFoundError,
 )
 from lit.core.snapshots.schemas import ProjectSnapshot
@@ -55,9 +55,7 @@ class BaseSnapshotReader(ABC):
         parsed_snapshots = self._parse_raw_snapshots(raw_snapshots)
 
         if not isinstance(parsed_snapshots, list):
-            raise InvalidSnapshotSchemaError(
-                f"{self.__class__.__name__}._parse_raw_snapshots must return a list!"
-            )
+            raise InvalidParseResultError(reader_class=self.__class__.__name__)
 
         return [ProjectSnapshot.from_dict(ss) for ss in parsed_snapshots]
 

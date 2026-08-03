@@ -3,13 +3,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import final
 
-from lit.core.structure.exceptions import RepoNotFoundError
+from lit.core.structure.exceptions import (
+    RepoNotFoundError,
+    StaticNamespaceInstantiationError,
+)
 
 
 @final
 class RepoStructure:
     def __new__(cls) -> None:
-        raise TypeError(f"Static namespace {cls.__name__} can not be instantiated!")
+        raise StaticNamespaceInstantiationError(class_name=cls.__name__)
 
     class Directories(StrEnum):
         """

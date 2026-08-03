@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import final
 
+from lit.core.snapshots.exceptions import InvalidSnapshotTypeError
 from lit.core.snapshots.reader import JSONSnapshotReader
 from lit.core.snapshots.schemas import ProjectSnapshot
 
@@ -29,9 +30,7 @@ class BaseSnapshotWriter(ABC):
     @final
     def add(self, snapshot: ProjectSnapshot) -> None:
         if not isinstance(snapshot, ProjectSnapshot):
-            raise TypeError(
-                f"'snapshot' must be 'ProjectSnapshot', got {type(snapshot).__name__}"
-            )
+            raise InvalidSnapshotTypeError(snapshot_type=type(snapshot).__name__)
 
         self._add(snapshot)
 

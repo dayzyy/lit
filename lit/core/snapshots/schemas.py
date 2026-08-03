@@ -4,19 +4,26 @@ from pathlib import Path
 from typing import Any, Self
 from uuid import uuid4
 
-from lit.core.snapshots.exceptions import InvalidSnapshotSchemaError
+from lit.core.snapshots.exceptions import (
+    FileSnapshotMissingKeyError,
+    FileSnapshotTypeError,
+    InvalidFilePathTypeError,
+    InvalidFileSnapshotTypeError,
+    InvalidFilesTypeError,
+    InvalidISODatetimeError,
+    InvalidSnapshotIDTypeError,
+    ProjectSnapshotMissingKeyError,
+    ProjectSnapshotTypeError,
+)
 
 
 def parse_iso_datetime(string: str) -> datetime:
     if not isinstance(string, str):
-        raise InvalidSnapshotSchemaError(f"'{string}' is not an ISO formated string!")
+        raise InvalidISODatetimeError(value=string)
     try:
-        time = datetime.fromisoformat(string)
-        return time
-    except Exception as err:
-        raise InvalidSnapshotSchemaError(
-            f"'{string}' is not an ISO formated string!"
-        ) from err
+        return datetime.fromisoformat(string)
+    except ValueError as err:
+        raise InvalidISODatetimeError(value=string) from err
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,17 +38,13 @@ class FileSnapshot:
         try:
             content = data["content"]
         except KeyError as err:
-            raise InvalidSnapshotSchemaError(
-                f"FileSnapshot missing key: {err.args[0]}"
-            ) from err
+            raise FileSnapshotMissingKeyError(key=err.args[0]) from err
 
         return cls(str(content))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FileSnapshot):
-            raise TypeError(
-                f"'other' must be 'FileSnapshot', got {type(other).__name__}"
-            )
+            raise FileSnapshotTypeError(other_type=type(other).__name__)
 
         return self.content == other.content
 
@@ -69,23 +72,21 @@ class ProjectSnapshot:
             raw_files: dict[str, dict[str, Any]] = data["files"]
             created_at_raw: str = data["created_at"]
         except KeyError as err:
-            raise InvalidSnapshotSchemaError(
-                f"ProjectSnapshot missing key: {err.args[0]}"
-            ) from err
+            raise ProjectSnapshotMissingKeyError(key=err.args[0]) from err
 
         if not isinstance(id, str):
-            raise InvalidSnapshotSchemaError("'id' must be a string!")
+            raise InvalidSnapshotIDTypeError()
         if not isinstance(raw_files, dict):
-            raise InvalidSnapshotSchemaError("'files' must be a dictionary!")
+            raise InvalidFilesTypeError()
 
         created_at = parse_iso_datetime(created_at_raw)
         files: dict[Path, FileSnapshot] = {}
 
         for path, ss in raw_files.items():
             if not isinstance(path, str):
-                raise InvalidSnapshotSchemaError("file path must be a string!")
+                raise InvalidFilePathTypeError()
             if not isinstance(ss, dict):
-                raise InvalidSnapshotSchemaError("file snapshot must be a dictionary!")
+                raise InvalidFileSnapshotTypeError()
 
             files[Path(path)] = FileSnapshot.from_dict(ss)
 
@@ -93,9 +94,7 @@ class ProjectSnapshot:
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ProjectSnapshot):
-            raise TypeError(
-                f"'other' must be 'ProjectSnapshot', got {type(other).__name__}"
-            )
+            raise ProjectSnapshotTypeError(other_type=type(other).__name__)
 
         return self.files == other.files
 
