@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Self, final
 
 from lit.cli.exceptions import TooManySnapshotIDsError
-from lit.commands.init import create_repo
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
 from lit.core.snapshots.builder import build_snapshot
 from lit.core.snapshots.comparer import compare_snapshots
@@ -12,6 +11,7 @@ from lit.core.snapshots.differ import diff_snapshots
 from lit.core.snapshots.exceptions import NothingToCommitError
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.snapshots.schemas import ProjectSnapshot
+from lit.core.structure.exceptions import RepoExistsError
 from lit.core.structure.structure import RepoStructure
 
 
@@ -95,8 +95,25 @@ class RepoCommand(LitCommand):
 
 
 class InitCommand(LitCommand):
+    """
+    Initialize a new Lit repository in the current directory.
+
+    Raise `RepoExistsError` if a repository already exists.
+    """
+
     def execute(self) -> str:
-        create_repo()
+        if RepoStructure.repo_exists(self.cwd):
+            raise RepoExistsError
+
+        lit_path = self.cwd / RepoStructure.Directories.BASE.value
+        lit_path.mkdir()
+
+        for dir in RepoStructure.Directories:
+            if dir is not RepoStructure.Directories.BASE:
+                dir.get_path(lit_path).mkdir(parents=True)
+
+        snapshot_file_path = SnapshotRepository._get_file_path(lit_path)
+        SNAPSHOT_WRITER_CLS._initialize_file(snapshot_file_path)
 
         return "Created an empty lit repository!"
 

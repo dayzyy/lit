@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from lit.commands.init import create_repo
+from lit.cli.commands import InitCommand
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.structure.structure import RepoStructure
@@ -21,8 +21,8 @@ class RepoContext:
 
 @pytest.fixture
 def lit_path(tmp_path: Path) -> Path:
-    lit_path = create_repo(tmp_path)
-    return lit_path
+    InitCommand(cwd=tmp_path).execute()
+    return RepoStructure.find_valid_repo_root(tmp_path)
 
 
 @pytest.fixture
