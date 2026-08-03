@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from functools import wraps
 from pathlib import Path
 from typing import Any, final
 
@@ -9,6 +10,17 @@ from lit.core.snapshots.exceptions import (
     SnapshotFileNotFoundError,
 )
 from lit.core.snapshots.schemas import ProjectSnapshot
+
+
+def _handle_file_not_found(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except FileNotFoundError as err:
+            raise SnapshotFileNotFoundError from err
+
+    return wrapper
 
 
 class BaseSnapshotReader(ABC):
@@ -34,25 +46,22 @@ class BaseSnapshotReader(ABC):
     def __init__(self, file_path: Path):
         self.file_path = file_path
 
-    @final
-    def _read_raw_snapshots(self) -> str:
-        try:
-            with open(self.file_path, "r") as snapshots:
-                return snapshots.read()
-        except FileNotFoundError as err:
-            raise SnapshotFileNotFoundError from err
-
     @abstractmethod
-    def _parse_raw_snapshots(self, raw_snapshots: str) -> list[dict[str, Any]]:
+    def _parse_raw_snapshots(self) -> list[dict[str, Any]]:
         """
         This method must turn 'raw_snapshots' into a python dictionary
         """
         raise NotImplementedError
 
     @final
+    @_handle_file_not_found
     def read_snapshots(self) -> list[ProjectSnapshot]:
-        raw_snapshots = self._read_raw_snapshots()
-        parsed_snapshots = self._parse_raw_snapshots(raw_snapshots)
+        """
+        Read all snapshots from the storage file as `ProjectSnapshot`
+        objects. Raise `SnapshotFileNotFoundError` if the storage file
+        does not exist.
+        """
+        parsed_snapshots = self._parse_raw_snapshots()
 
         if not isinstance(parsed_snapshots, list):
             raise InvalidParseResultError(reader_class=self.__class__.__name__)
@@ -61,5 +70,10 @@ class BaseSnapshotReader(ABC):
 
 
 class JSONSnapshotReader(BaseSnapshotReader):
-    def _parse_raw_snapshots(self, raw_snapshots: str) -> list[dict[str, Any]]:
-        return json.loads(raw_snapshots)
+    """
+    Reads snapshots from a JSON file.
+    """
+
+    def _parse_raw_snapshots(self) -> list[dict[str, Any]]:
+        with open(self.file_path, "r") as f:
+            return json.load(f)
