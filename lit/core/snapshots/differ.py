@@ -9,8 +9,12 @@ def diff_snapshots(
     to_snapshot: ProjectSnapshot,
 ) -> str:
     """
-    Generate a textual diff describing the changes required to transform
-    `from_snapshot` into `to_snapshot`.
+    Generate a unified diff describing how to transform `from_snapshot`
+    into `to_snapshot`.
+
+    Change detection is delegated to `compare_snapshots`. The output is
+    a concatenation of unified diffs, one per changed file, grouped in
+    the order: added, removed, then modified.
     """
     changes = compare_snapshots(from_snapshot, to_snapshot)
 

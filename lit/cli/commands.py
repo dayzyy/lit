@@ -55,6 +55,9 @@ class LitCommand(ABC):
 
     @final
     def run(self):
+        """
+        Execute the command and print its output.
+        """
         message = self.execute()
         print(message)
 
@@ -119,6 +122,10 @@ class InitCommand(LitCommand):
 
 
 class SnapshotCreateCommand(RepoCommand):
+    """
+    Create a snapshot of the current working tree.
+    """
+
     def __init__(self, message: str, cwd: Path | None = None):
         super().__init__(cwd)
         self.message = message
@@ -150,6 +157,10 @@ class SnapshotCreateCommand(RepoCommand):
 
 
 class SnapshotListCommand(RepoCommand):
+    """
+    List all snapshots stored in the repository.
+    """
+
     def execute(self):
         snapshots = self.repo.all()
 
@@ -165,7 +176,11 @@ class SnapshotListCommand(RepoCommand):
         return "\n".join(lines)
 
 
-class SnapshotCkeckoutCommand(RepoCommand):
+class SnapshotCheckoutCommand(RepoCommand):
+    """
+    Restore the working tree to the state of a snapshot.
+    """
+
     def __init__(self, snapshot_id: str, cwd: Path | None = None):
         super().__init__(cwd)
         self.target_id = snapshot_id
@@ -201,6 +216,10 @@ class SnapshotCkeckoutCommand(RepoCommand):
 
 
 class StatusCommand(RepoCommand):
+    """
+    Show the status of the working tree relative to the latest snapshot.
+    """
+
     def execute(self):
         latest_snapshot = self.repo.latest()
         cwd_snapshot = build_snapshot(root=self.root, message="")
@@ -240,6 +259,10 @@ class StatusCommand(RepoCommand):
 
 
 class DiffCommand(RepoCommand):
+    """
+    Show a unified diff between snapshots and/or the working tree.
+    """
+
     def __init__(self, snapshot_ids: list[str], cwd: Path | None = None):
         if len(snapshot_ids) > 2:
             raise TooManySnapshotIDsError

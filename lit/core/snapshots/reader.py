@@ -25,16 +25,22 @@ def _handle_file_not_found(func):
 
 class BaseSnapshotReader(ABC):
     """
-    A Base Abstract Class for SnapshotLoaders
-    Child classes must implement the load method
+    Base class for readers that load snapshots from a single storage file.
+
+    Reading the storage is delegated to `_parse_raw_snapshots`, which
+    subclasses must implement and may do however the storage format allows
+    (e.g. plain file reading for JSON, a database driver for SQLite).
+    `read_snapshots` turns the returned snapshot dictionaries into
+    `ProjectSnapshot` objects and raises `SnapshotFileNotFoundError` if the
+    storage file does not exist.
     """
 
-    _FORBIDDEN_OVERRIDES = (
-        "_read_raw_snapshots",
-        "_read_snapshots",
-    )
+    _FORBIDDEN_OVERRIDES = ("read_snapshots",)
 
     def __init_subclass__(cls) -> None:
+        """
+        Prevent subclasses from overriding `read_snapshots`.
+        """
         for attr_name in cls._FORBIDDEN_OVERRIDES:
             if cls.__dict__.get(attr_name) is not None:
                 raise ForbiddenOverrideError(
@@ -44,12 +50,16 @@ class BaseSnapshotReader(ABC):
         return super().__init_subclass__()
 
     def __init__(self, file_path: Path):
+        """
+        Store the path to the snapshot storage file.
+        """
         self.file_path = file_path
 
     @abstractmethod
     def _parse_raw_snapshots(self) -> list[dict[str, Any]]:
         """
-        This method must turn 'raw_snapshots' into a python dictionary
+        Read and parse the snapshot storage into a list of snapshot
+        dictionaries. Must be implemented by subclasses.
         """
         raise NotImplementedError
 

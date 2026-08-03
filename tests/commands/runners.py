@@ -3,7 +3,7 @@ from typing import Protocol
 
 from lit.cli.commands import (
     DiffCommand,
-    SnapshotCkeckoutCommand,
+    SnapshotCheckoutCommand,
     SnapshotCreateCommand,
     StatusCommand,
 )
@@ -35,7 +35,7 @@ class UnitCommands:
         return DiffCommand(snapshot_ids=list(snapshot_ids), cwd=self.cwd).execute()
 
     def checkout(self, snapshot_id: str) -> None:
-        SnapshotCkeckoutCommand(snapshot_id, cwd=self.cwd).run()
+        SnapshotCheckoutCommand(snapshot_id, cwd=self.cwd).run()
 
     def snapshot(self, message: str) -> None:
         SnapshotCreateCommand(message=message, cwd=self.cwd).run()

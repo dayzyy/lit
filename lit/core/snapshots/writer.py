@@ -10,32 +10,37 @@ from lit.core.snapshots.schemas import ProjectSnapshot
 
 class BaseSnapshotWriter(ABC):
     """
-    Initial content written to a newly created snapshot storage file.
+    Base class for writers that persist snapshots to a single storage file.
 
-    Each subclass should override this value with a structure appropriate
-    for its storage format.
-
-    Example:
-    JSONSnapshotWriter.INITIAL_STRUCTURE = tuple()
-
-    This allows the storage file to be parsed immediately and have
-    snapshots appended to it.
+    The storage file must be initialized via `_initialize_file` before the
+    first snapshot is appended. Subclasses set `INITIAL_STRUCTURE` to the
+    content written to a newly created file and implement `_append` to
+    persist a snapshot. `append` is final.
     """
 
     INITIAL_STRUCTURE = None
 
     def __init__(self, file_path: Path):
+        """
+        Store the path to the snapshot storage file.
+        """
         self.file_path = file_path
 
     @final
-    def add(self, snapshot: ProjectSnapshot) -> None:
+    def append(self, snapshot: ProjectSnapshot) -> None:
+        """
+        Append a snapshot to the configured storage file.
+
+        Raise `InvalidSnapshotTypeError` if `snapshot` is not a
+        `ProjectSnapshot`.
+        """
         if not isinstance(snapshot, ProjectSnapshot):
             raise InvalidSnapshotTypeError(snapshot_type=type(snapshot).__name__)
 
-        self._add(snapshot)
+        self._append(snapshot)
 
     @abstractmethod
-    def _add(self, snapshot: ProjectSnapshot) -> None:
+    def _append(self, snapshot: ProjectSnapshot) -> None:
         """
         Persist a snapshot to the configured storage file.
         """
@@ -43,18 +48,22 @@ class BaseSnapshotWriter(ABC):
 
     @classmethod
     @abstractmethod
-    def _initialize_file(cls, snapshos_file_path: Path):
+    def _initialize_file(cls, snapshots_file_path: Path) -> None:
         """
-        Initialize the snapshot storage file with the format's
-        default structure.
+        Initialize the snapshot storage file with the format's default
+        structure.
         """
         raise NotImplementedError
 
 
 class JSONSnapshotWriter(BaseSnapshotWriter):
+    """
+    Appends snapshots to a JSON storage file.
+    """
+
     INITIAL_STRUCTURE = []
 
-    def _add(self, snapshot: ProjectSnapshot):
+    def _append(self, snapshot: ProjectSnapshot) -> None:
         json_reader = JSONSnapshotReader(self.file_path)
         snapshots = json_reader.read_snapshots()
         snapshots.append(snapshot)
@@ -63,6 +72,6 @@ class JSONSnapshotWriter(BaseSnapshotWriter):
             json.dump([s.to_dict() for s in snapshots], f)
 
     @classmethod
-    def _initialize_file(cls, snapshos_file_path) -> None:
-        with open(snapshos_file_path, "w") as f:
+    def _initialize_file(cls, snapshots_file_path: Path) -> None:
+        with open(snapshots_file_path, "w") as f:
             json.dump(cls.INITIAL_STRUCTURE, f)
