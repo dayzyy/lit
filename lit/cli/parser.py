@@ -4,7 +4,7 @@ from lit.cli.commands import (
     DiffCommand,
     InitCommand,
     LitCommand,
-    SnapshotCkeckoutCommand,
+    SnapshotCheckoutCommand,
     SnapshotCreateCommand,
     SnapshotListCommand,
     StatusCommand,
@@ -32,6 +32,10 @@ def register_command(
 
 
 def create_parser() -> ArgumentParser:
+    """
+    Build and return the top-level `argparse` parser with every command
+    registered as a subcommand.
+    """
     parser = ArgumentParser(prog="lit")
 
     subparsers = parser.add_subparsers(
@@ -42,7 +46,7 @@ def create_parser() -> ArgumentParser:
     register_command(subparsers, "init", InitCommand)
     register_command(subparsers, "snapshot", SnapshotCreateCommand)
     register_command(subparsers, "log", SnapshotListCommand)
-    register_command(subparsers, "checkout", SnapshotCkeckoutCommand)
+    register_command(subparsers, "checkout", SnapshotCheckoutCommand)
     register_command(subparsers, "status", StatusCommand)
     register_command(subparsers, "diff", DiffCommand)
 

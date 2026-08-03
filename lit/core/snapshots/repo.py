@@ -12,6 +12,14 @@ from lit.core.structure.structure import RepoStructure
 
 
 class SnapshotRepository:
+    """
+    High-level access to the snapshots of a repository.
+
+    Wraps a `BaseSnapshotReader` and `BaseSnapshotWriter` configured for
+    the repository's snapshot storage file, exposing common operations
+    such as appending, listing, and querying snapshots.
+    """
+
     _FILE_NAME = "snapshots"
 
     def __init__(
@@ -20,6 +28,13 @@ class SnapshotRepository:
         reader_cls: type[BaseSnapshotReader],
         writer_cls: type[BaseSnapshotWriter],
     ):
+        """
+        Create a handle for the snapshot storage of a repository.
+
+        The repository must already be initialized: `lit_path` must be a
+        `.lit` directory containing a snapshots file. Raise
+        `SnapshotFileNotFoundError` if the storage file does not exist.
+        """
         snapshots_file_path = self._get_file_path(lit_path)
         if not snapshots_file_path.exists():
             raise SnapshotFileNotFoundError
@@ -30,12 +45,15 @@ class SnapshotRepository:
     @classmethod
     @final
     def _get_file_path(cls, lit_path: Path) -> Path:
+        """
+        Return the path to the snapshot storage file of `lit_path`.
+        """
         path = RepoStructure.Directories.SNAPSHOTS.get_path(lit_path) / cls._FILE_NAME
         return path
 
     @final
     def add(self, snapshot: ProjectSnapshot) -> None:
-        self.writer.add(snapshot)
+        self.writer.append(snapshot)
 
     @final
     def latest(self) -> ProjectSnapshot | None:
@@ -53,6 +71,11 @@ class SnapshotRepository:
 
     @final
     def get(self, id: str) -> ProjectSnapshot:
+        """
+        Return the snapshot with the given `id`.
+
+        Raise `SnapshotNotFoundError` if no snapshot has that `id`.
+        """
         snapshots = self.all()
 
         for ss in snapshots:

@@ -6,7 +6,7 @@ from lit.core.structure.structure import RepoStructure
 
 def is_ignored(path: Path) -> bool:
     """
-    Determines whether a given file system path should be excluded
+    Determine whether a given file system path should be excluded
     from snapshot creation.
 
     Currently, only the repository metadata directory (e.g. `.lit`)
@@ -21,8 +21,11 @@ def is_ignored(path: Path) -> bool:
 
 def build_snapshot(root: Path, message: str) -> ProjectSnapshot:
     """
-    Constructs a ProjectSnapshot representing the current state of
-    the working directory.
+    Construct a `ProjectSnapshot` of the working directory at `root`.
+
+    Walks the directory tree under `root` and captures the content of
+    every non-ignored file, keyed by its path relative to `root`. Files
+    are read as text; binary files are not supported.
     """
     files = {}
     for path in root.rglob("*"):

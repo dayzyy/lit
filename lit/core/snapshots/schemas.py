@@ -18,6 +18,12 @@ from lit.core.snapshots.exceptions import (
 
 
 def parse_iso_datetime(string: str) -> datetime:
+    """
+    Parse an ISO-formatted datetime string.
+
+    Raise `InvalidISODatetimeError` if the value is not a string or cannot
+    be parsed.
+    """
     if not isinstance(string, str):
         raise InvalidISODatetimeError(value=string)
     try:
@@ -43,6 +49,8 @@ class FileSnapshot:
         return cls(str(content))
 
     def __eq__(self, other: object) -> bool:
+        # Deliberately raise instead of returning NotImplemented, so comparing
+        # against an unrelated type fails loudly.
         if not isinstance(other, FileSnapshot):
             raise FileSnapshotTypeError(other_type=type(other).__name__)
 
@@ -59,6 +67,7 @@ class ProjectSnapshot:
     def to_dict(self) -> dict[str, Any]:
         id = self.id
         message = self.message
+        # JSON keys must be strings, so Path keys are serialized as str.
         files = {str(path): snapshot.to_dict() for path, snapshot in self.files.items()}
         created_at = self.created_at.isoformat()
 
@@ -93,6 +102,8 @@ class ProjectSnapshot:
         return cls(id=id, message=message, files=files, created_at=created_at)
 
     def __eq__(self, other: object) -> bool:
+        # Deliberately raise instead of returning NotImplemented, so comparing
+        # against an unrelated type fails loudly.
         if not isinstance(other, ProjectSnapshot):
             raise ProjectSnapshotTypeError(other_type=type(other).__name__)
 
