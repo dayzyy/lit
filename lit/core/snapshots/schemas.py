@@ -63,19 +63,28 @@ class ProjectSnapshot:
     message: str
     id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now())
+    parent_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        parent_id = self.parent_id
         id = self.id
         message = self.message
         # JSON keys must be strings, so Path keys are serialized as str.
         files = {str(path): snapshot.to_dict() for path, snapshot in self.files.items()}
         created_at = self.created_at.isoformat()
 
-        return {"id": id, "message": message, "files": files, "created_at": created_at}
+        return {
+            "parent_id": parent_id,
+            "id": id,
+            "message": message,
+            "files": files,
+            "created_at": created_at,
+        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         try:
+            parent_id: str = data["parent_id"]
             id: str = data["id"]
             message: str = data["message"]
             raw_files: dict[str, dict[str, Any]] = data["files"]
@@ -99,7 +108,13 @@ class ProjectSnapshot:
 
             files[Path(path)] = FileSnapshot.from_dict(ss)
 
-        return cls(id=id, message=message, files=files, created_at=created_at)
+        return cls(
+            id=id,
+            message=message,
+            files=files,
+            created_at=created_at,
+            parent_id=parent_id,
+        )
 
     def __eq__(self, other: object) -> bool:
         # Deliberately raise instead of returning NotImplemented, so comparing
