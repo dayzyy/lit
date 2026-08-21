@@ -13,6 +13,7 @@ def make_valid_file_snapshot_dict() -> dict[str, str]:
 
 def make_valid_project_snapshot_dict() -> dict[str, Any]:
     snapshot = {
+        "parent_id": "0",
         "id": "0",
         "message": "test message",
         "files": {
