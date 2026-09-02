@@ -5,6 +5,7 @@ from typing import Self, final
 
 from lit.cli.exceptions import TooManySnapshotIDsError
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from lit.core.constants import DEFAULT_BRANCH_NAME
 from lit.core.snapshots.builder import build_snapshot
 from lit.core.snapshots.comparer import compare_snapshots
 from lit.core.snapshots.differ import diff_snapshots
@@ -115,6 +116,16 @@ class InitCommand(LitCommand):
             if dir is not RepoStructure.Directories.BASE:
                 dir.get_path(lit_path).mkdir(parents=True)
 
+        for file in RepoStructure.Files:
+            file.get_path(lit_path).touch()
+
+        # Create default branch
+        default_branch_path = (
+            RepoStructure.Directories.BRANCHES.get_path(lit_path) / DEFAULT_BRANCH_NAME
+        )
+        default_branch_path.touch()
+
+        # Initialize snapshot storage
         snapshot_file_path = SnapshotRepository._get_file_path(lit_path)
         SNAPSHOT_WRITER_CLS._initialize_file(snapshot_file_path)
 
