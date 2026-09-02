@@ -20,8 +20,6 @@ class SnapshotRepository:
     such as appending, listing, and querying snapshots.
     """
 
-    _FILE_NAME = "snapshots"
-
     def __init__(
         self,
         lit_path: Path,
@@ -48,7 +46,7 @@ class SnapshotRepository:
         """
         Return the path to the snapshot storage file of `lit_path`.
         """
-        path = RepoStructure.Directories.SNAPSHOTS.get_path(lit_path) / cls._FILE_NAME
+        path = RepoStructure.Files.SNAPSHOTS.get_path(lit_path)
         return path
 
     @final
