@@ -33,6 +33,7 @@ class RepoStructure:
         BASE = ".lit"
 
         SNAPSHOTS = "snapshots"
+        BRANCHES = "branches"
 
         def get_path(self, lit_path: Path) -> Path:
             """
@@ -48,6 +49,43 @@ class RepoStructure:
                 lit_path = lit_path / self.value
             return lit_path
 
+    class Files(StrEnum):
+        """
+        Represents all required static files in a Lit repository.
+
+        Each member corresponds to a file that must exist in a valid
+        repository, stored as its path relative to the repository root.
+        Files that are created at runtime, such as branch files, are not
+        included; see `branch_file` for those. `get_path` returns the
+        full `Path` of the represented file relative to the repository
+        root.
+        """
+
+        HEAD = "HEAD"
+        SNAPSHOTS = "snapshots/snapshots"
+
+        def get_path(self, lit_path: Path) -> Path:
+            """
+            Return the path to the file this member represents.
+
+            The repository must already be initialized: `lit_path` must be
+            the path to a repository root, i.e. a `.lit` directory such as
+            the one returned by `RepoStructure.find_repo_root`.
+            """
+            return lit_path / self.value
+
+    @classmethod
+    def branch_file_path(cls, lit_path: Path, name: str) -> Path:
+        """
+        Return the path to the file of the branch called `name`.
+
+        The repository must already be initialized: `lit_path` must be
+        the path to a repository root, i.e. a `.lit` directory such as
+        the one returned by `RepoStructure.find_repo_root`. The branch
+        file itself does not need to exist yet.
+        """
+        return cls.Directories.BRANCHES.get_path(lit_path) / name
+
     @classmethod
     def is_valid_lit_repo(cls, root_path: Path) -> bool:
         """
@@ -55,13 +93,13 @@ class RepoStructure:
 
         `root_path` must be a `.lit` directory; the repository is valid
         when every directory in `Directories`, except `BASE`, exists
-        directly inside it.
+        directly inside it and every file in `Files` exists inside it.
         """
         return all(
             (root_path / dir.value).is_dir()
             for dir in cls.Directories
             if dir != cls.Directories.BASE
-        )
+        ) and all((root_path / file.value).is_file() for file in cls.Files)
 
     @classmethod
     @lru_cache
