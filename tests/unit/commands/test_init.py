@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from lit.cli.commands import InitCommand
+from lit.core.constants import DEFAULT_BRANCH_NAME
 from lit.core.snapshots.reader import JSONSnapshotReader
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.snapshots.writer import JSONSnapshotWriter
@@ -20,6 +21,14 @@ def test_init_command_creates_expected_directories_and_files(tmp_path: Path):
 
     for f in RepoStructure.Files:
         assert f.get_path(lit_path).exists()
+
+
+def test_init_commands_creates_default_branch(tmp_path: Path):
+    InitCommand(cwd=tmp_path).execute()
+    lit_path = tmp_path / ".lit"
+
+    default_branch_path = RepoStructure.branch_file_path(lit_path, DEFAULT_BRANCH_NAME)
+    assert default_branch_path.exists()
 
 
 def test_init_command_results_in_valid_lit_repo(tmp_path: Path):
