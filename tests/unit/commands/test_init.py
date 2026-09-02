@@ -10,16 +10,24 @@ from lit.core.structure.exceptions import RepoExistsError
 from lit.core.structure.structure import RepoStructure
 
 
-def test_init_command_creates_expected_directories(tmp_path: Path):
+def test_init_command_creates_expected_directories_and_files(tmp_path: Path):
     InitCommand(cwd=tmp_path).execute()
-
-    base = tmp_path / RepoStructure.Directories.BASE.value
-
-    assert base.exists()
+    lit_path = tmp_path / ".lit"
 
     for d in RepoStructure.Directories:
         if d != RepoStructure.Directories.BASE:
-            assert (base / d.value).exists()
+            assert d.get_path(lit_path).exists()
+
+    for f in RepoStructure.Files:
+        assert f.get_path(lit_path).exists()
+
+
+def test_init_command_results_in_valid_lit_repo(tmp_path: Path):
+    InitCommand(cwd=tmp_path).execute()
+
+    lit_path = RepoStructure.find_valid_repo_root(tmp_path)
+
+    assert RepoStructure.is_valid_lit_repo(lit_path)
 
 
 def test_init_command_raises_when_repo_already_initialized(tmp_path: Path):
