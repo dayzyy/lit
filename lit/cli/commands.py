@@ -5,6 +5,7 @@ from typing import Self, final
 
 from lit.cli.exceptions import TooManySnapshotIDsError
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from lit.core.branches.repo import BranchRepository
 from lit.core.constants import DEFAULT_BRANCH_NAME
 from lit.core.snapshots.builder import build_snapshot
 from lit.core.snapshots.comparer import compare_snapshots
@@ -90,12 +91,17 @@ class RepoCommand(LitCommand):
         self.root = self.lit_path.parent
 
         self._init_snapshot_repo()
+        self._init_branch_repo()
 
     @final
     def _init_snapshot_repo(self):
-        self.repo = SnapshotRepository(
+        self.snapshot_repo = SnapshotRepository(
             self.lit_path, SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
         )
+
+    @final
+    def _init_branch_repo(self):
+        self.branch_repo = BranchRepository(self.lit_path, self.snapshot_repo)
 
 
 class InitCommand(LitCommand):
@@ -119,15 +125,20 @@ class InitCommand(LitCommand):
         for file in RepoStructure.Files:
             file.get_path(lit_path).touch()
 
-        # Create default branch
-        default_branch_path = (
-            RepoStructure.Directories.BRANCHES.get_path(lit_path) / DEFAULT_BRANCH_NAME
+        snapshot_repo = SnapshotRepository(
+            lit_path, SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
         )
-        default_branch_path.touch()
+        branch_repo = BranchRepository(lit_path, snapshot_repo)
 
         # Initialize snapshot storage
         snapshot_file_path = SnapshotRepository._get_file_path(lit_path)
         SNAPSHOT_WRITER_CLS._initialize_file(snapshot_file_path)
+
+        # Create default branch
+        branch_repo.create(DEFAULT_BRANCH_NAME)
+
+        # Point HEAD to the default branch
+        branch_repo.attach(DEFAULT_BRANCH_NAME)
 
         return "Created an empty lit repository!"
 
@@ -156,13 +167,13 @@ class SnapshotCreateCommand(RepoCommand):
         )
 
     def execute(self):
-        latest_snapshot = self.repo.latest()
+        latest_snapshot = self.snapshot_repo.latest()
         new_snapshot = build_snapshot(self.lit_path.parent, self.message)
 
         if latest_snapshot is not None and latest_snapshot == new_snapshot:
             raise NothingToCommitError
 
-        self.repo.add(new_snapshot)
+        self.snapshot_repo.add(new_snapshot)
 
         return f"Created a new snapshot with id: {new_snapshot.id}"
 
@@ -173,7 +184,7 @@ class SnapshotListCommand(RepoCommand):
     """
 
     def execute(self):
-        snapshots = self.repo.all()
+        snapshots = self.snapshot_repo.all()
 
         lines = [
             f"{'ID':36} {'CREATED':20} MESSAGE",
@@ -209,7 +220,9 @@ class SnapshotCheckoutCommand(RepoCommand):
         )
 
     def execute(self):
-        snapshot_to_checkout = self.repo.get(self.target_id)
+        snapshot_to_checkout = self.snapshot_repo.get(
+            self.target_id, raise_if_not_found=True
+        )
         target_files = snapshot_to_checkout.files
 
         cwd_snapshot = build_snapshot(root=self.root, message="")
@@ -232,7 +245,7 @@ class StatusCommand(RepoCommand):
     """
 
     def execute(self):
-        latest_snapshot = self.repo.latest()
+        latest_snapshot = self.snapshot_repo.latest()
         cwd_snapshot = build_snapshot(root=self.root, message="")
 
         # If no snapshots have been taken before, all files are new
@@ -307,18 +320,18 @@ class DiffCommand(RepoCommand):
         cwd_snapshot = build_snapshot(root=self.root, message="")
 
         if not self.snapshot_ids:
-            latest_snapshot = self.repo.latest() or ProjectSnapshot(
+            latest_snapshot = self.snapshot_repo.latest() or ProjectSnapshot(
                 files={}, message=""
             )
             diff = diff_snapshots(latest_snapshot, cwd_snapshot)
 
         elif len(self.snapshot_ids) == 1:
-            to_snapshot = self.repo.get(self.snapshot_ids[0])
+            to_snapshot = self.snapshot_repo.get(self.snapshot_ids[0])
             diff = diff_snapshots(cwd_snapshot, to_snapshot)
 
         else:
-            from_snapshot = self.repo.get(self.snapshot_ids[0])
-            to_snapshot = self.repo.get(self.snapshot_ids[1])
+            from_snapshot = self.snapshot_repo.get(self.snapshot_ids[0])
+            to_snapshot = self.snapshot_repo.get(self.snapshot_ids[1])
             diff = diff_snapshots(from_snapshot, to_snapshot)
 
         return diff
