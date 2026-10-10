@@ -4,7 +4,7 @@ from lit.core.utils.exceptions import TypeErrorWithDefaultMessage as TypeErrorBa
 INVALID_SNAPSHOT_SCHEMA = "Invalid snapshot schema!"
 SNAPSHOT_FILE_NOT_FOUND = "Snapshot file not found!"
 SNAPSHOT_FILE_ALREADY_EXISTS = "Snapshot file already exists!"
-SNAPSHOT_NOT_FOUND = "Snapshot not found!"
+SNAPSHOT_NOT_FOUND = "Snapshot {id} not found!"
 NOTHING_TO_COMMIT = "No new changes to commit!"
 
 INVALID_ISO_DATETIME = "'{value}' is not an ISO formatted string!"
