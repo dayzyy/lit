@@ -6,7 +6,6 @@ from lit.core.branches.exceptions import (
     BranchIsEmptyError,
     BranchNotFoundError,
     HeadIsEmptyError,
-    RefIsEmptyError,
 )
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.structure.structure import RepoStructure
@@ -22,24 +21,26 @@ class BranchRepository:
     def _initialize_default_branch(self) -> None:
         self.create(DEFAULT_BRANCH_NAME)
 
-    def get_branch_path(self, branch: str) -> Path:
+    def branch_path(self, branch: str) -> Path:
         path = RepoStructure.branch_file_path(self.lit_path, branch)
         return path
 
     def branch_exists(self, branch: str) -> bool:
-        branch_file_path = self.get_branch_path(branch)
-        return branch_file_path.exists()
+        path = self.branch_path(branch)
+        exists = path.exists()
+        return exists
 
     def require_branch(self, branch: str) -> Path:
         """
-        Returns the path to the branch file
+        Returns branch path
 
-        Raises BranchNotFoundError if the branch does not exist
+        Raises BranchNotFoundError if branch doesnt exist
         """
-        branch_file_path = self.get_branch_path(branch)
-        if not branch_file_path.exists():
+        if not self.branch_exists(branch):
             raise BranchNotFoundError(branch=branch)
-        return branch_file_path
+
+        path = self.branch_path(branch)
+        return path
 
     def read_ref(self, ref: Path) -> str | None:
         """
@@ -48,30 +49,17 @@ class BranchRepository:
         snapshot_id = ref.read_text().strip() or None
         return snapshot_id
 
-    def read_and_validate_ref(self, ref: Path) -> str | None:
-        """
-        Validates a snapshot reference
-
-        Returns the snapshot_id
-
-        Raises RefIsEmptyError if at least 1 snapshot exists,
-        but the ref file is empty
-        """
-        snapshot_id = self.read_ref(ref)
-        if snapshot_id is None and self.snapshot_repo.latest() is not None:
-            raise RefIsEmptyError
-
-        return snapshot_id
-
     def create(self, branch: str) -> None:
         """
         Creates a new branch and points it to the snapshot currently
         resolved by HEAD, if one exists
+
+        Raises BranchExistsError if branch already exists
         """
         if self.branch_exists(branch):
             raise BranchExistsError(branch=branch)
 
-        branch_path = self.get_branch_path(branch)
+        branch_path = self.branch_path(branch)
         branch_path.touch()
 
         snapshot_id = self.resolve_head()
@@ -83,10 +71,9 @@ class BranchRepository:
         Returns ID of the snapshot the branch points to
         """
         branch_file_path = self.require_branch(branch)
+        snapshot_id = self.read_ref(branch_file_path)
 
-        try:
-            snapshot_id = self.read_and_validate_ref(branch_file_path)
-        except RefIsEmptyError:
+        if snapshot_id is None and self.empty_ref_is_invalid():
             raise BranchIsEmptyError(branch=branch)
 
         return snapshot_id
@@ -98,9 +85,10 @@ class BranchRepository:
         Raises SnapshotNotFoundError if its not found
         """
         # Make sure that snapshot with the id exists
-        self.snapshot_repo.get(snapshot_id, raise_if_not_found=True)
+        self.snapshot_repo.require_snapshot(snapshot_id)
 
-        self.require_branch(branch).write_text(snapshot_id)
+        path = self.require_branch(branch)
+        path.write_text(snapshot_id.strip())
 
     def attach(self, branch: str) -> None:
         """
@@ -117,7 +105,7 @@ class BranchRepository:
 
         Raises SnapshotNotFoundError if the snapshot does not exist
         """
-        self.snapshot_repo.get(snapshot_id, raise_if_not_found=True)
+        self.snapshot_repo.require_snapshot(snapshot_id)
         self.head_path.write_text(snapshot_id.strip())
 
     def read_head_raw(self) -> str | None:
@@ -138,6 +126,7 @@ class BranchRepository:
         head_content = self.read_head_raw()
         if head_content is None:
             return False
+
         return not self.branch_exists(head_content)
 
     def current_branch(self) -> str | None:
@@ -147,9 +136,10 @@ class BranchRepository:
         Returns None if HEAD is detached or empty
         """
         head_content = self.read_head_raw()
-        if head_content is None or not self.branch_exists(head_content):
+        if head_content is None:
             return None
-        return head_content
+
+        return head_content if self.branch_exists(head_content) else None
 
     def resolve_head(self) -> str | None:
         """
@@ -168,14 +158,20 @@ class BranchRepository:
         head_content = self.read_head_raw()
 
         if head_content is None:
-            if self.snapshot_repo.latest() is not None:
+            if self.empty_ref_is_invalid():
                 raise HeadIsEmptyError
             return None
 
         if not self.branch_exists(head_content):
             return head_content
 
-        try:
-            return self.read_and_validate_ref(self.get_branch_path(head_content))
-        except RefIsEmptyError:
+        branch_path = self.branch_path(head_content)
+        snapshot_id = self.read_ref(branch_path)
+        if snapshot_id is None and self.empty_ref_is_invalid():
             raise BranchIsEmptyError(branch=head_content)
+
+        return snapshot_id
+
+    def empty_ref_is_invalid(self) -> bool:
+        snapshot_id = self.snapshot_repo.latest()
+        return snapshot_id is not None

@@ -10,10 +10,10 @@ from lit.core.branches.exceptions import (
 from lit.core.branches.repo import BranchRepository
 from lit.core.snapshots.exceptions import SnapshotNotFoundError
 from lit.core.snapshots.schemas import ProjectSnapshot
+from lit.core.structure.structure import RepoStructure
 from tests.conftest import RepoContext
 from tests.unit.utils import make_valid_project_snapshot_dict
 
-SNAPSHOT_ID = "0"
 OTHER_BRANCH = "feature"
 
 
@@ -29,17 +29,30 @@ def add_snapshot(repo_context: RepoContext) -> str:
 
 
 class TestBranchExists:
-    def test_existing_branch_exists(self, branch_repo: BranchRepository):
+    def test_true_for_existing_branch(self, branch_repo: BranchRepository):
         assert branch_repo.branch_exists(DEFAULT_BRANCH_NAME)
 
-    def test_missing_branch_does_not_exist(self, branch_repo: BranchRepository):
+    def test_false_for_missing_branch(self, branch_repo: BranchRepository):
         assert not branch_repo.branch_exists(OTHER_BRANCH)
+
+
+class TestBranchPath:
+    def test_returns_path_in_branches_dir(
+        self, branch_repo: BranchRepository, repo_context: RepoContext
+    ):
+        path = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
+
+        expected = (
+            RepoStructure.Directories.BRANCHES.get_path(repo_context.lit_path)
+            / DEFAULT_BRANCH_NAME
+        )
+        assert path == expected
 
 
 class TestRequireBranch:
     def test_returns_path_for_existing_branch(self, branch_repo: BranchRepository):
         path = branch_repo.require_branch(DEFAULT_BRANCH_NAME)
-        assert path == branch_repo.get_branch_path(DEFAULT_BRANCH_NAME)
+        assert path == branch_repo.branch_path(DEFAULT_BRANCH_NAME)
 
     def test_raises_for_missing_branch(self, branch_repo: BranchRepository):
         with pytest.raises(BranchNotFoundError):
@@ -49,6 +62,28 @@ class TestRequireBranch:
         with pytest.raises(BranchNotFoundError) as exc_info:
             branch_repo.require_branch(OTHER_BRANCH)
         assert OTHER_BRANCH in str(exc_info.value)
+
+
+class TestReadRef:
+    def test_reads_value(self, branch_repo: BranchRepository):
+        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
+        ref.write_text("123")
+        assert branch_repo.read_ref(ref) == "123"
+
+    def test_strips_surrounding_whitespace(self, branch_repo: BranchRepository):
+        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
+        ref.write_text("  123\n")
+        assert branch_repo.read_ref(ref) == "123"
+
+    def test_returns_none_when_empty(self, branch_repo: BranchRepository):
+        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
+        ref.write_text("")
+        assert branch_repo.read_ref(ref) is None
+
+    def test_returns_none_when_whitespace_only(self, branch_repo: BranchRepository):
+        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
+        ref.write_text("  \n")
+        assert branch_repo.read_ref(ref) is None
 
 
 class TestCreate:
@@ -101,6 +136,11 @@ class TestTip:
 
         assert branch_repo.tip(DEFAULT_BRANCH_NAME) == snapshot_id
 
+    def test_returns_none_when_empty_and_no_snapshots(
+        self, branch_repo: BranchRepository
+    ):
+        assert branch_repo.tip(DEFAULT_BRANCH_NAME) is None
+
     def test_raises_for_missing_branch(self, branch_repo: BranchRepository):
         with pytest.raises(BranchNotFoundError):
             branch_repo.tip(OTHER_BRANCH)
@@ -136,6 +176,10 @@ class TestAdvance:
 
         with pytest.raises(BranchNotFoundError):
             branch_repo.advance(OTHER_BRANCH, snapshot_id)
+
+    def test_raises_for_missing_snapshot(self, branch_repo: BranchRepository):
+        with pytest.raises(SnapshotNotFoundError):
+            branch_repo.advance(DEFAULT_BRANCH_NAME, "missing")
 
 
 class TestAttach:
@@ -177,6 +221,10 @@ class TestReadHeadRaw:
         branch_repo.head_path.write_text("")
         assert branch_repo.read_head_raw() is None
 
+    def test_returns_none_when_head_is_whitespace(self, branch_repo: BranchRepository):
+        branch_repo.head_path.write_text("  \n")
+        assert branch_repo.read_head_raw() is None
+
 
 class TestCurrentBranch:
     def test_returns_branch_when_attached(self, branch_repo: BranchRepository):
@@ -204,6 +252,11 @@ class TestIsDetached:
     ):
         snapshot_id = add_snapshot(repo_context)
         branch_repo.detach(snapshot_id)
+
+        assert branch_repo.is_detached()
+
+    def test_true_when_head_points_at_unknown_ref(self, branch_repo: BranchRepository):
+        branch_repo.head_path.write_text("unknown")
 
         assert branch_repo.is_detached()
 

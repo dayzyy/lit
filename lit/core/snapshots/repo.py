@@ -68,18 +68,21 @@ class SnapshotRepository:
         return snapshots
 
     @final
-    def get(self, id: str, raise_if_not_found: bool = False) -> ProjectSnapshot | None:
+    def get(self, id: str) -> ProjectSnapshot | None:
         """
-        Return the snapshot with the given `id`.
-
-        Raise `SnapshotNotFoundError` if no snapshot has that `id` and
-        raise_if_not_found is True
+        Returns the snapshot with the given `id`, or None if it doesnt exist.
         """
         snapshots = self.all()
 
         for ss in snapshots:
             if ss.id == id:
                 return ss
+        return None
 
-        if raise_if_not_found:
-            raise SnapshotNotFoundError
+    @final
+    def require_snapshot(self, id: str) -> ProjectSnapshot:
+        snapshot = self.get(id)
+        if snapshot is None:
+            raise SnapshotNotFoundError(id=id)
+
+        return snapshot

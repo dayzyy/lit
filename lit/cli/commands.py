@@ -220,9 +220,7 @@ class SnapshotCheckoutCommand(RepoCommand):
         )
 
     def execute(self):
-        snapshot_to_checkout = self.snapshot_repo.get(
-            self.target_id, raise_if_not_found=True
-        )
+        snapshot_to_checkout = self.snapshot_repo.require_snapshot(self.target_id)
         target_files = snapshot_to_checkout.files
 
         cwd_snapshot = build_snapshot(root=self.root, message="")
@@ -326,12 +324,12 @@ class DiffCommand(RepoCommand):
             diff = diff_snapshots(latest_snapshot, cwd_snapshot)
 
         elif len(self.snapshot_ids) == 1:
-            to_snapshot = self.snapshot_repo.get(self.snapshot_ids[0])
+            to_snapshot = self.snapshot_repo.require_snapshot(self.snapshot_ids[0])
             diff = diff_snapshots(cwd_snapshot, to_snapshot)
 
         else:
-            from_snapshot = self.snapshot_repo.get(self.snapshot_ids[0])
-            to_snapshot = self.snapshot_repo.get(self.snapshot_ids[1])
+            from_snapshot = self.snapshot_repo.require_snapshot(self.snapshot_ids[0])
+            to_snapshot = self.snapshot_repo.require_snapshot(self.snapshot_ids[1])
             diff = diff_snapshots(from_snapshot, to_snapshot)
 
         return diff
