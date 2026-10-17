@@ -19,7 +19,9 @@ def is_ignored(path: Path) -> bool:
     return RepoStructure.Directories.BASE.value in path.parts
 
 
-def build_snapshot(root: Path, message: str) -> ProjectSnapshot:
+def build_snapshot(
+    root: Path, message: str, parent_id: str | None = None
+) -> ProjectSnapshot:
     """
     Construct a `ProjectSnapshot` of the working directory at `root`.
 
@@ -35,4 +37,4 @@ def build_snapshot(root: Path, message: str) -> ProjectSnapshot:
 
             files[relative_path] = FileSnapshot(content=content)
 
-    return ProjectSnapshot(files=files, message=message)
+    return ProjectSnapshot(files=files, message=message, parent_id=parent_id)

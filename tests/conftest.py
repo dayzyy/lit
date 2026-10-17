@@ -5,6 +5,7 @@ import pytest
 
 from lit.cli.commands import InitCommand
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
+from lit.core.branches.repo import BranchRepository
 from lit.core.snapshots.repo import SnapshotRepository
 from lit.core.structure.structure import RepoStructure
 
@@ -13,6 +14,7 @@ from lit.core.structure.structure import RepoStructure
 class RepoContext:
     lit_path: Path
     snapshot_repo: SnapshotRepository
+    branch_repo: BranchRepository
 
     @property
     def root(self) -> Path:
@@ -36,5 +38,8 @@ def repo_context(lit_path: Path) -> RepoContext:
     snapshot_repo = SnapshotRepository(
         lit_path, SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
     )
+    branch_repo = BranchRepository(lit_path, snapshot_repo)
 
-    return RepoContext(lit_path=lit_path, snapshot_repo=snapshot_repo)
+    return RepoContext(
+        lit_path=lit_path, snapshot_repo=snapshot_repo, branch_repo=branch_repo
+    )
