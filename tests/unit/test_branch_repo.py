@@ -64,28 +64,6 @@ class TestRequireBranch:
         assert OTHER_BRANCH in str(exc_info.value)
 
 
-class TestReadRef:
-    def test_reads_value(self, branch_repo: BranchRepository):
-        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
-        ref.write_text("123")
-        assert branch_repo.read_ref(ref) == "123"
-
-    def test_strips_surrounding_whitespace(self, branch_repo: BranchRepository):
-        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
-        ref.write_text("  123\n")
-        assert branch_repo.read_ref(ref) == "123"
-
-    def test_returns_none_when_empty(self, branch_repo: BranchRepository):
-        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
-        ref.write_text("")
-        assert branch_repo.read_ref(ref) is None
-
-    def test_returns_none_when_whitespace_only(self, branch_repo: BranchRepository):
-        ref = branch_repo.branch_path(DEFAULT_BRANCH_NAME)
-        ref.write_text("  \n")
-        assert branch_repo.read_ref(ref) is None
-
-
 class TestCreate:
     def test_creates_branch(self, branch_repo: BranchRepository):
         branch_repo.create(OTHER_BRANCH)

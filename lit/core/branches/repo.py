@@ -42,12 +42,18 @@ class BranchRepository:
         path = self.branch_path(branch)
         return path
 
-    def read_ref(self, ref: Path) -> str | None:
+    def read_branch(self, path: Path) -> str | None:
         """
-        Reads a snapshot reference - a file containing a snapshot_id
+        Reads a branch - a file containing a snapshot_id
         """
-        snapshot_id = ref.read_text().strip() or None
+        snapshot_id = path.read_text().strip() or None
         return snapshot_id
+
+    def write_branch(self, path: Path, snapshot_id: str) -> None:
+        """
+        Writes to a branch - a file containing a snapshot_id
+        """
+        path.write_text(snapshot_id.strip())
 
     def create(self, branch: str) -> None:
         """
@@ -71,7 +77,7 @@ class BranchRepository:
         Returns ID of the snapshot the branch points to
         """
         branch_file_path = self.require_branch(branch)
-        snapshot_id = self.read_ref(branch_file_path)
+        snapshot_id = self.read_branch(branch_file_path)
 
         if snapshot_id is None and self.empty_ref_is_invalid():
             raise BranchIsEmptyError(branch=branch)
@@ -82,35 +88,37 @@ class BranchRepository:
         """
         Points the branch to snapshot with given id
 
-        Raises SnapshotNotFoundError if its not found
+        Raises SnapshotNotFoundError if snapshot not found
+        Raises BranchNotFoundError if branch not found
         """
         # Make sure that snapshot with the id exists
         self.snapshot_repo.require_snapshot(snapshot_id)
 
         path = self.require_branch(branch)
-        path.write_text(snapshot_id.strip())
+        path.write_text(snapshot_id)
 
     def attach(self, branch: str) -> None:
         """
         Points HEAD at the given branch (attached HEAD)
 
-        Raises BranchNotFoundError if the branch does not exist
+        Raises BranchNotFoundError if branch not found
         """
         self.require_branch(branch)
-        self.head_path.write_text(branch.strip())
+        self.head_path.write_text(branch)
 
     def detach(self, snapshot_id: str) -> None:
         """
         Points HEAD directly at the given snapshot (detached HEAD)
 
-        Raises SnapshotNotFoundError if the snapshot does not exist
+        Raises SnapshotNotFoundError if snapshot not found
         """
         self.snapshot_repo.require_snapshot(snapshot_id)
         self.head_path.write_text(snapshot_id.strip())
 
     def read_head_raw(self) -> str | None:
         """
-        Returns the raw content of HEAD: a branch name (attached HEAD)
+        Returns the raw content of HEAD:
+        a branch name (attached HEAD)
         or a snapshot id (detached HEAD)
 
         Returns None if HEAD is empty
@@ -165,12 +173,13 @@ class BranchRepository:
         if not self.branch_exists(head_content):
             return head_content
 
-        branch_path = self.branch_path(head_content)
-        snapshot_id = self.read_ref(branch_path)
+        snapshot_id = self.tip(head_content)
         if snapshot_id is None and self.empty_ref_is_invalid():
             raise BranchIsEmptyError(branch=head_content)
 
         return snapshot_id
+
+    # def write_head()
 
     def empty_ref_is_invalid(self) -> bool:
         snapshot_id = self.snapshot_repo.latest()
