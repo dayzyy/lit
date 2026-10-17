@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Self, final
+from typing import Generic, Self, TypeVar, final
 
 from lit.cli.exceptions import TooManySnapshotIDsError
 from lit.config import SNAPSHOT_READER_CLS, SNAPSHOT_WRITER_CLS
@@ -16,17 +16,20 @@ from lit.core.snapshots.schemas import ProjectSnapshot
 from lit.core.structure.exceptions import RepoExistsError
 from lit.core.structure.structure import RepoStructure
 
+T = TypeVar("T")
 
-class LitCommand(ABC):
+
+class LitCommand(ABC, Generic[T]):
     """
     Base class for all CLI commands.
 
     Commands are executed through the public `run()` method, which
-    provides a stable entry point and allows common execution logic
-    to be introduced in one place.
+    provides a stable entry point, prints the rendered output, and
+    returns the command result.
 
     Subclasses must implement `execute()` with the command-specific
-    behavior.
+    behavior, and may override `render()` to control how the result
+    is displayed.
     """
 
     def __init__(self, cwd: Path | None = None):
@@ -56,19 +59,31 @@ class LitCommand(ABC):
         return cls(cwd=cwd)
 
     @final
-    def run(self):
+    def run(self) -> T:
         """
-        Execute the command and print its output.
+        Execute the command, print its rendered output, and return its result.
         """
-        message = self.execute()
-        print(message)
+        result = self.execute()
+        print(self.render(result))
+        return result
+
+    @classmethod
+    def render(cls, result: T) -> str:
+        """
+        Format the command result for display.
+
+        The default implementation passes strings through unchanged;
+        commands returning a domain object override this to produce
+        their user-facing message.
+        """
+        return str(result)
 
     @abstractmethod
-    def execute(self) -> str:
+    def execute(self) -> T:
         raise NotImplementedError
 
 
-class RepoCommand(LitCommand):
+class RepoCommand(LitCommand[T]):
     """
     Base class for commands that operate on an existing repository.
 
@@ -104,7 +119,7 @@ class RepoCommand(LitCommand):
         self.branch_repo = BranchRepository(self.lit_path, self.snapshot_repo)
 
 
-class InitCommand(LitCommand):
+class InitCommand(LitCommand[str]):
     """
     Initialize a new Lit repository in the current directory.
 
@@ -143,7 +158,7 @@ class InitCommand(LitCommand):
         return "Created an empty lit repository!"
 
 
-class SnapshotCreateCommand(RepoCommand):
+class SnapshotCreateCommand(RepoCommand[ProjectSnapshot]):
     """
     Create a snapshot of the current working tree.
     """
@@ -166,19 +181,34 @@ class SnapshotCreateCommand(RepoCommand):
             help="Snapshot message describing the state",
         )
 
-    def execute(self):
+    def execute(self) -> ProjectSnapshot:
         latest_snapshot = self.snapshot_repo.latest()
-        new_snapshot = build_snapshot(self.lit_path.parent, self.message)
+
+        parent_snapshot_id = self.branch_repo.resolve_head()
+        new_snapshot = build_snapshot(
+            self.lit_path.parent, self.message, parent_id=parent_snapshot_id
+        )
 
         if latest_snapshot is not None and latest_snapshot == new_snapshot:
             raise NothingToCommitError
 
         self.snapshot_repo.add(new_snapshot)
 
-        return f"Created a new snapshot with id: {new_snapshot.id}"
+        # Update current branch or HEAD (if HEAD is detached) to track the new snapshot
+        current_branch = self.branch_repo.current_branch()
+        if current_branch is None:
+            self.branch_repo.detach(new_snapshot.id)
+        else:
+            self.branch_repo.advance(current_branch, new_snapshot.id)
+
+        return new_snapshot
+
+    @classmethod
+    def render(cls, result: ProjectSnapshot) -> str:
+        return f"Created a new snapshot with id: {result.id}"
 
 
-class SnapshotListCommand(RepoCommand):
+class SnapshotListCommand(RepoCommand[str]):
     """
     List all snapshots stored in the repository.
     """
@@ -198,7 +228,7 @@ class SnapshotListCommand(RepoCommand):
         return "\n".join(lines)
 
 
-class SnapshotCheckoutCommand(RepoCommand):
+class SnapshotCheckoutCommand(RepoCommand[str]):
     """
     Restore the working tree to the state of a snapshot.
     """
@@ -237,7 +267,7 @@ class SnapshotCheckoutCommand(RepoCommand):
         return f"Checked out to snapshot {snapshot_to_checkout.id}"
 
 
-class StatusCommand(RepoCommand):
+class StatusCommand(RepoCommand[str]):
     """
     Show the status of the working tree relative to the latest snapshot.
     """
@@ -280,7 +310,7 @@ class StatusCommand(RepoCommand):
         return "\n".join(lines)
 
 
-class DiffCommand(RepoCommand):
+class DiffCommand(RepoCommand[str]):
     """
     Show a unified diff between snapshots and/or the working tree.
     """

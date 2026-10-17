@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from lit.cli.commands import (
     DiffCommand,
@@ -8,6 +8,7 @@ from lit.cli.commands import (
     StatusCommand,
 )
 from lit.cli.parser import create_parser
+from lit.core.snapshots.schemas import ProjectSnapshot
 
 
 class CommandRunner(Protocol):
@@ -19,7 +20,7 @@ class CommandRunner(Protocol):
 
     def checkout(self, snapshot_id: str) -> None: ...
 
-    def snapshot(self, message: str) -> None: ...
+    def snapshot(self, message: str) -> ProjectSnapshot: ...
 
 
 class UnitCommands:
@@ -37,8 +38,8 @@ class UnitCommands:
     def checkout(self, snapshot_id: str) -> None:
         SnapshotCheckoutCommand(snapshot_id, cwd=self.cwd).run()
 
-    def snapshot(self, message: str) -> None:
-        SnapshotCreateCommand(message=message, cwd=self.cwd).run()
+    def snapshot(self, message: str) -> ProjectSnapshot:
+        return SnapshotCreateCommand(message=message, cwd=self.cwd).run()
 
 
 class CliCommands:
@@ -48,23 +49,26 @@ class CliCommands:
         self.cwd = cwd
         self.capsys = capsys
 
-    def _run(self, argv: list[str]) -> str:
+    def _run(self, argv: list[str]) -> tuple[str, Any]:
         parser = create_parser()
         args = parser.parse_args(argv)
 
         command = args.command_cls.from_args(args=args, cwd=self.cwd)
-        command.run()
+        result = command.run()
 
-        return self.capsys.readouterr().out.strip()
+        return self.capsys.readouterr().out.strip(), result
 
     def status(self) -> str:
-        return self._run(["status"])
+        output, _ = self._run(["status"])
+        return output
 
     def diff(self, *snapshot_ids: str) -> str:
-        return self._run(["diff", *snapshot_ids])
+        output, _ = self._run(["diff", *snapshot_ids])
+        return output
 
     def checkout(self, snapshot_id: str) -> None:
         self._run(["checkout", snapshot_id])
 
-    def snapshot(self, message: str) -> None:
-        self._run(["snapshot", "-m", message])
+    def snapshot(self, message: str) -> ProjectSnapshot:
+        _, result = self._run(["snapshot", "-m", message])
+        return result
