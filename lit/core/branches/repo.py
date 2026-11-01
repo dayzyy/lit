@@ -149,6 +149,25 @@ class BranchRepository:
 
         return head_content if self.branch_exists(head_content) else None
 
+    def resolve_ref(self, ref: str) -> str:
+        """
+        Returns ID of the snapshot the ref points to
+
+        A Ref is either a snapshot id directly, or a branch
+        which is resolved to a snapshot id via the `self.tip`
+
+        Raises BranchIsEmptyError if the ref is an empty branch
+        while at least 1 snapshot exists
+        """
+        snapshot_id = ref
+        if self.branch_exists(ref):
+            snapshot_id = self.tip(ref)
+
+            if snapshot_id is None and self.empty_ref_is_invalid():
+                raise BranchIsEmptyError(branch=ref)
+
+        return snapshot_id
+
     def resolve_head(self) -> str | None:
         """
         Returns ID of the snapshot HEAD points to
@@ -179,7 +198,8 @@ class BranchRepository:
 
         return snapshot_id
 
-    # def write_head()
+    def write_head(self, ref: str) -> None:
+        self.head_path.write_text(ref.strip())
 
     def empty_ref_is_invalid(self) -> bool:
         snapshot_id = self.snapshot_repo.latest()

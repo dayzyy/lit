@@ -233,20 +233,21 @@ class SnapshotCheckoutCommand(RepoCommand[str]):
     Restore the working tree to the state of a snapshot.
     """
 
-    def __init__(self, snapshot_id: str, cwd: Path | None = None):
+    def __init__(self, ref: str, cwd: Path | None = None):
         super().__init__(cwd)
-        self.target_id = snapshot_id
+        self.ref = ref
+        self.target_id = self.branch_repo.resolve_ref(ref)
 
     @classmethod
     def from_args(cls, args: Namespace, cwd: Path | None = None) -> Self:
-        snapshot_id = args.snapshot_id
-        return cls(snapshot_id=snapshot_id, cwd=cwd)
+        ref = args.ref
+        return cls(ref=ref, cwd=cwd)
 
     @staticmethod
     def configure_parser(parser: ArgumentParser) -> None:
         parser.add_argument(
-            "snapshot_id",
-            help="ID of the snapshot to check out",
+            "ref",
+            help="ID of the snapshot or a branch name to check out",
         )
 
     def execute(self):
@@ -263,6 +264,8 @@ class SnapshotCheckoutCommand(RepoCommand[str]):
             abs_path = self.root / relative_path
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_text(target_files[relative_path].content)
+
+        self.branch_repo.write_head(self.ref)
 
         return f"Checked out to snapshot {snapshot_to_checkout.id}"
 
